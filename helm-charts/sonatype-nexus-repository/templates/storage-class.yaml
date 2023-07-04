@@ -1,0 +1,22 @@
+{{- if and $.Values.nexusData.local.enabled (not $.Values.nexusData.nfs.enabled) -}}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.nexusData.storageClass.name}}
+  namespace: {{ .Values.namespaces.nexusNs }}
+provisioner: {{ .Values.nexusData.local.storageClass.provisioner }}
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: {{ .Values.nexusData.storageClass.reclaimPolicy }}
+{{- end }}
+
+{{- if and $.Values.nexusData.nfs.enabled (not $.Values.nexusData.local.enabled) -}}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.nexusData.storageClass.name}}
+  namespace: {{ .Values.namespaces.nexusNs }}
+provisioner: {{ .Values.nexusData.nfs.storageClass.provisioner }}
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: {{ .Values.nexusData.storageClass.reclaimPolicy }}
+
+{{- end }}
