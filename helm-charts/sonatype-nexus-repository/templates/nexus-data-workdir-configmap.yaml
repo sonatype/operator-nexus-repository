@@ -1,4 +1,5 @@
-{{- if and $.Values.nexusData.local.enabled (not $.Values.nexusData.nfs.enabled) -}}
+{{- if $.Values.nexusData.local.enabled -}}
+{{- if not $.Values.nexusData.nfs.enabled -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,4 +12,5 @@ data:
     {{- range $value := until (.Values.statefulset.replicaCount | int )}}
     mkdir -p /nexus-repo-mgr-work-dir/work{{ $value }}
     {{- end }}
+{{- end }}
 {{- end }}

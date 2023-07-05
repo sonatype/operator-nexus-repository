@@ -19,7 +19,7 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
-
+---
 {{- if and $.Values.nexusData.nfs.enabled (not $.Values.nexusData.local.enabled) -}}
 kind: PersistentVolume
 metadata:

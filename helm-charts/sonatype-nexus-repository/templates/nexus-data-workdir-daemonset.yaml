@@ -1,4 +1,5 @@
-{{- if and $.Values.nexusData.local.enabled (not $.Values.nexusData.nfs.enabled) -}}
+{{- if $.Values.nexusData.local.enabled -}}
+{{- if not $.Values.nexusData.nfs.enabled -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -50,4 +51,5 @@ spec:
       - name: host-mnt
         hostPath:
           path: /tmp/install
+{{- end }}
 {{- end }}
