@@ -1,6 +1,6 @@
 # Declare variables to be passed into your templates.
 namespaces:
-  nexusNs: nexusrepo
+  nexusNs: test-nexusrepo
 statefulset:
   name: nexusrepo-statefulset
   clusterName: nexusrepo-cluster
@@ -69,7 +69,7 @@ nexusData:
   pvc:
     size: 100Gi
   storageClass:
-    name: nexusrepo-storage
+    name: test-nexus-repo-storage
     reclaimPolicy: Retain
   local:
     enabled: true
