@@ -133,41 +133,36 @@ tests:
               value: "-Xms2703m -Xmx2703m \
           -Dnexus.licenseFile=${LICENSE_FILE} \
           -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
-#                volumeMounts:
-#                  - name: nexusdata
-#                    mountPath: /nexus-data
-#                  - name: license-volume
-#                    mountPath: /etc/nexus-repo-license
-#                    readOnly: true
-#        documentIndex: 0
-#
-#      - equal:
-#          path: spec.volumeMode
-#          value: "Filesystem"
-#        documentIndex: 0
-#
-#      - equal:
-#          path: spec.accessModes
-#          value:
-#          - ReadWriteOnce
-#        documentIndex: 0
-#
-#      - equal:
-#          path: spec.persistentVolumeReclaimPolicy
-#          value: "Retain"
-#        documentIndex: 0
-#
-#
-#      - equal:
-#          path: spec.storageClassName
-#          value: "nxrm-ha-latest-test-release-nexusrepo-storage"
-#        documentIndex: 0
-#
-#
-#      - equal:
-#          path: spec.local.path
-#          value: "/nexus-repo-mgr-work-dir/work0"
-#        documentIndex: 0
 
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+              - name: nexusdata
+                mountPath: /nexus-data
+              - name: license-volume
+                mountPath: /etc/nexus-repo-license
+                readOnly: true
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: license-volume
+              secret:
+                secretName: "nxrm-ha-latest-test-release-nexus-repo-license"
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: nexusdata
 
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value:
+            - ReadWriteOnce
 
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "nxrm-ha-latest-test-release-nexusrepo-storage"
+
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources
+          value:
+            requests:
+              storage: 100Gi
