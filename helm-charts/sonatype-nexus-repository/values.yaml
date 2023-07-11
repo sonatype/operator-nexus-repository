@@ -24,10 +24,10 @@ statefulset:
       # See help documentation, these are minimum system requirements
       requests:
         cpu: 4
-        memory: "4Gi"
+        memory: "8Gi"
       limits:
         cpu: 4
-        memory: "4Gi"
+        memory: "8Gi"
     containerPort: 8081
     pullPolicy: IfNotPresent
     terminationGracePeriod: 20
@@ -37,7 +37,7 @@ statefulset:
       user: nexus
       password: nexus
       jdbcUrl: jdbc:postgresql://localhost:5433/nexus
-      nexusInitialPassword: admin123
+      nexusInitialPassword: nexusabc
 ingress:
   name: nexus-ingress
   enabled: false
@@ -97,7 +97,7 @@ nexusData:
     pv:
       name: nexusrepo-nfs-storage-pv
       size: 200Gi
-      mountPath: /path/to/blobStorageLocation #Path where blobs should be stored on your NFS drive
+      mountPath: /nexusdata/mountPath #Path where blobs should be stored on your NFS drive
       mountOptions:
         - hard
         - nfsvers=4.1
@@ -112,6 +112,7 @@ license:
 service:  #Nexus Repo NodePort Service
   nexus:
     name: nexus-repo-service
+    enabled: false
     type: NodePort
     protocol: TCP
     port: 80

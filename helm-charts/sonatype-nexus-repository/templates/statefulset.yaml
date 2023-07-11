@@ -45,15 +45,15 @@ spec:
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "{{ .Values.statefulset.container.env.clustered }}"
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
-              value: {{ .Values.statefulset.container.env.jdbcUrl }}
+              value: "{{ .Values.statefulset.container.env.jdbcUrl }}"
             - name: NEXUS_DATASTORE_NEXUS_USERNAME
-              value: {{ .Values.statefulset.container.env.user }}
+              value: "{{ .Values.statefulset.container.env.user }}"
             - name: NEXUS_DATASTORE_NEXUS_PASSWORD
-              value: {{ .Values.statefulset.container.env.password }}
+              value: "{{ .Values.statefulset.container.env.password }}"
             - name: LICENSE_FILE
               value: /etc/nexus-repo-license/nexus-repo-license.lic
             - name: NEXUS_SECURITY_INITIAL_PASSWORD
-              value: {{ .Values.statefulset.container.env.nexusInitialPassword }}
+              value: "{{ .Values.statefulset.container.env.nexusInitialPassword }}"
             - name: INSTALL4J_ADD_VM_PARAMS
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
           -Dnexus.licenseFile=${LICENSE_FILE} \

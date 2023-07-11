@@ -38,7 +38,7 @@ spec:
     {{- end }}
 {{- end }}
 ---
-{{- if .Values.ingress.dockerIngress.enabled -}}
+{{- if .Values.ingress.dockerIngress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -56,12 +56,12 @@ spec:
     {{- else}}
     - http:
     {{- end }}
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ .Chart.Name }}-{{ .Values.service.docker.name }}
-            port:
-              number: {{ .Values.service.docker.port }}
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-{{ .Values.service.docker.name }}
+                port:
+                  number: {{ .Values.service.docker.port }}
 {{- end }}

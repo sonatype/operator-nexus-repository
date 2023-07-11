@@ -1,3 +1,4 @@
+{{- if .Values.service.nexus.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -13,9 +14,9 @@ spec:
     - protocol: {{ .Values.service.nexus.protocol }}
       port: {{ .Values.service.nexus.port }}
       targetPort: {{ .Values.service.nexus.targetPort }}
+{{- end }}
 ---
-
-{{- if .Values.service.docker.enabled -}}
+{{- if .Values.service.docker.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -28,8 +29,8 @@ spec:
   selector:
     app: nxrm
   ports:
-    protocol: {{ .Values.service.docker.protocol }}
-    port: {{ .Values.service.docker.port }}
-    targetPort: {{ .Values.service.docker.targetPort }}
+    - protocol: {{ .Values.service.docker.protocol }}
+      port: {{ .Values.service.docker.port }}
+      targetPort: {{ .Values.service.docker.targetPort }}
 {{- end }}
 

@@ -1,0 +1,173 @@
+suite: test statefulset
+templates:
+  - statefulset.yaml
+release:
+  name: "test-release"
+chart:
+  version: "latest"
+tests:
+  - it: should create nexus pod
+    set:
+      statefulset:
+        replicaCount: 2
+      nexusData:
+        local:
+          enabled: true
+        nfs:
+          enabled: false
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: "nxrm-ha-latest-nexusrepo-statefulset"
+      - equal:
+          path: metadata.namespace
+          value: "nexusrepo"
+
+      - equal:
+          path: metadata.labels.app
+          value: "nxrm"
+
+      - equal:
+          path: spec.replicas
+          value: 2
+
+      - equal:
+          path: spec.serviceName
+          value: "nxrm-ha-latest-test-release-nexusrepo-statefulset"
+
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: "nxrm"
+
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: "nxrm"
+
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: chown-nexusdata-owner-to-nexus
+
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: busybox:1.33.1
+
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            limits:
+              cpu: "0.2"
+              memory: "512Mi"
+            requests:
+              cpu: "0.1"
+              memory: "256Mi"
+
+      - equal:
+          path: spec.template.spec.initContainers[0].command
+          value: [ /bin/sh ]
+
+      - equal:
+          path: spec.template.spec.initContainers[0].args
+          value:
+              - -c
+              - >-
+                chown -R '200:200' /nexus-data
+
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          value:
+            - name: nexusdata
+              mountPath: /nexus-data
+
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: nxrm-app
+
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: sonatype/nexus3:latest
+
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+              # See help documentation, these are minimum system requirements
+              requests:
+                cpu: 4
+                memory: "8Gi"
+              limits:
+                cpu: 4
+                memory: "8Gi"
+
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 200
+
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - containerPort: 8081
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: DATASTORE_CLUSTERED_ENABLED
+              value: "true"
+            - name: NEXUS_DATASTORE_NEXUS_JDBCURL
+              value: "jdbc:postgresql://localhost:5433/nexus"
+            - name: NEXUS_DATASTORE_NEXUS_USERNAME
+              value: "nexus"
+            - name: NEXUS_DATASTORE_NEXUS_PASSWORD
+              value: "nexus"
+            - name: LICENSE_FILE
+              value: /etc/nexus-repo-license/nexus-repo-license.lic
+            - name: NEXUS_SECURITY_INITIAL_PASSWORD
+              value: "nexusabc"
+            - name: INSTALL4J_ADD_VM_PARAMS
+              value: "-Xms2703m -Xmx2703m \
+          -Dnexus.licenseFile=${LICENSE_FILE} \
+          -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+#                volumeMounts:
+#                  - name: nexusdata
+#                    mountPath: /nexus-data
+#                  - name: license-volume
+#                    mountPath: /etc/nexus-repo-license
+#                    readOnly: true
+#        documentIndex: 0
+#
+#      - equal:
+#          path: spec.volumeMode
+#          value: "Filesystem"
+#        documentIndex: 0
+#
+#      - equal:
+#          path: spec.accessModes
+#          value:
+#          - ReadWriteOnce
+#        documentIndex: 0
+#
+#      - equal:
+#          path: spec.persistentVolumeReclaimPolicy
+#          value: "Retain"
+#        documentIndex: 0
+#
+#
+#      - equal:
+#          path: spec.storageClassName
+#          value: "nxrm-ha-latest-test-release-nexusrepo-storage"
+#        documentIndex: 0
+#
+#
+#      - equal:
+#          path: spec.local.path
+#          value: "/nexus-repo-mgr-work-dir/work0"
+#        documentIndex: 0
+
+
+

@@ -1,5 +1,5 @@
 {{- range $value := until (.Values.statefulset.replicaCount | int )}}
-{{- if and $.Values.nexusData.local.enabled (not $.Values.nexusData.nfs.enabled) -}}
+{{- if and $.Values.nexusData.local.enabled (not $.Values.nexusData.nfs.enabled) }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -20,7 +20,7 @@ spec:
   {{- end }}
 {{- end }}
 ---
-{{- if and $.Values.nexusData.nfs.enabled (not $.Values.nexusData.local.enabled) -}}
+{{- if and $.Values.nexusData.nfs.enabled (not $.Values.nexusData.local.enabled) }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
