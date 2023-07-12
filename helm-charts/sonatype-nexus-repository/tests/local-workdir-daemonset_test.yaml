@@ -65,7 +65,6 @@ tests:
           path: spec.template.spec.initContainers[0].securityContext.privileged
           value: true
 
-
       - equal:
           path: spec.template.spec.initContainers[0].volumeMounts
           value:
@@ -73,3 +72,36 @@ tests:
               mountPath: /tmp
             - name: host-mnt
               mountPath: /host-dir
+
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: directory-creator
+
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: busybox:1.33.1
+
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: [/bin/sh]
+
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -c
+            - >-
+              tail -f /dev/null
+
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.privileged
+          value: true
+
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: create-nexus-work-dir-script
+              configMap:
+                name: "nxrm-ha-latest-test-release-create-nexus-workdir-config"
+            - name: host-mnt
+              hostPath:
+                path: /tmp/install
