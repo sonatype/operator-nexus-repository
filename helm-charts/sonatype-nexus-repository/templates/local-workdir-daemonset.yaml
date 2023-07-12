@@ -15,7 +15,7 @@ spec:
         job: dircreator
     spec:
       hostPID: true
-      restartPolicy: Always
+      restartPolicy: "Always"
       initContainers:
         # Copy file for creating nexus work directory over and execute it on host 
         - name: create-nexus-work-dir
