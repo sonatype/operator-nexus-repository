@@ -71,5 +71,3 @@ spec:
         resources:
           requests:
             storage: {{ .Values.nexusData.pvc.size }}
-
-
