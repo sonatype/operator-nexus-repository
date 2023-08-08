@@ -35,7 +35,7 @@ spec:
             - containerPort: {{ .Values.statefulset.container.containerPort }}
           env:
             - name: IS_OPEN_SHIFT_DEPLOYMENT
-              value: true
+              value: "true"
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "{{ .Values.statefulset.container.env.clustered }}"
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
@@ -56,7 +56,7 @@ spec:
             - name: nexusdata
               mountPath: /nexus-data
             - name: license-volume
-              mountPath: /nexus-data/etc/nexus-repo-license
+              mountPath: /var/nexus-repository-license/etc/nexus-repo-license
               readOnly: true
       volumes:
         - name: license-volume
