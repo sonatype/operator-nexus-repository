@@ -34,6 +34,8 @@ spec:
           ports:
             - containerPort: {{ .Values.statefulset.container.containerPort }}
           env:
+            - name: IS_OPEN_SHIFT_DEPLOYMENT
+              value: true
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "{{ .Values.statefulset.container.env.clustered }}"
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
