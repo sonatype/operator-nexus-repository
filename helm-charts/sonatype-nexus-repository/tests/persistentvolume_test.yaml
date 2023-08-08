@@ -81,12 +81,12 @@ tests:
 
       - equal:
           path: spec.local.path
-          value: "/nexus-repo-mgr-work-dir/work0"
+          value: "/var/nexus-repo-mgr-work-dir/work0"
         documentIndex: 0
 
       - equal:
           path: spec.local.path
-          value: "/nexus-repo-mgr-work-dir/work1"
+          value: "/var/nexus-repo-mgr-work-dir/work1"
         documentIndex: 1
 
       - equal:

@@ -16,19 +16,6 @@ spec:
       labels:
         app: nxrm
     spec:
-      initContainers:
-        - name: chown-nexusdata-owner-to-nexus
-          image: {{ .Values.statefulset.initContainer.image.repository }}:{{ .Values.statefulset.initContainer.image.tag }}
-          resources:
-            {{ toYaml .Values.statefulset.initContainer.resources | nindent 12 }}
-          command: [/bin/sh]
-          args:
-            - -c
-            - >-
-              chown -R '200:200' /nexus-data
-          volumeMounts:
-            - name: nexusdata
-              mountPath: /nexus-data
       terminationGracePeriodSeconds: {{ .Values.statefulset.container.terminationGracePeriod }}
       containers:
         - name: nxrm-app
@@ -37,7 +24,12 @@ spec:
           resources:
             {{ toYaml .Values.statefulset.container.resources | nindent 12 }}
           securityContext:
-            runAsUser: 200
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
           imagePullPolicy: {{ .Values.statefulset.container.pullPolicy }}
           ports:
             - containerPort: {{ .Values.statefulset.container.containerPort }}
@@ -51,7 +43,7 @@ spec:
             - name: NEXUS_DATASTORE_NEXUS_PASSWORD
               value: "{{ .Values.statefulset.container.env.password }}"
             - name: LICENSE_FILE
-              value: /etc/nexus-repo-license/nexus-repo-license.lic
+              value: /nexus-data/etc/nexus-repo-license/nexus-repo-license.lic
             - name: NEXUS_SECURITY_INITIAL_PASSWORD
               value: "{{ .Values.statefulset.container.env.nexusInitialPassword }}"
             - name: INSTALL4J_ADD_VM_PARAMS
@@ -62,7 +54,7 @@ spec:
             - name: nexusdata
               mountPath: /nexus-data
             - name: license-volume
-              mountPath: /etc/nexus-repo-license
+              mountPath: /nexus-data/etc/nexus-repo-license
               readOnly: true
       volumes:
         - name: license-volume

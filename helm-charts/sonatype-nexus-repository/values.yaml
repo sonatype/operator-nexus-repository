@@ -65,7 +65,7 @@ workDir:
         tag: 1.33.1
 nexusData:
   pv:
-    directoryPrefix: /nexus-repo-mgr-work-dir/work
+    directoryPrefix: /var/nexus-repo-mgr-work-dir/work
   pvc:
     size: 100Gi
   storageClass:
