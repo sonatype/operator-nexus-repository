@@ -5,7 +5,7 @@ kind: NexusRepo
 metadata:
   name: example-nexusrepo
 spec:
-  # Default values copied from <project_dir>/helm-charts/sonatype-nexus/values.yaml
+  # Default values copied from <project_dir>/helm-charts/sonatype-nexus-repository/values.yaml
 
   config:
     data: null

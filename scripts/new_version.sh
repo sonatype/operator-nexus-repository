@@ -11,6 +11,7 @@ fi
 stage=$1
 
 shortVersion=$(echo $2 | sed 's/-.*//')
+version=$(echo $2 | cut -c 3- | sed 's/-.*$/.0/')
 
 if [ "$1" = "image" ]; then
     if [ $# -ne 3 ]; then
@@ -23,17 +24,18 @@ if [ "$1" = "image" ]; then
     certAppVersion=$3
 
     applyTemplate() {
-        sed "s!{{shortVersion}}!${shortVersion}!g" \
+        sed "s!{{version}}!${version}!g" \
+        | sed "s!{{shortVersion}}!${shortVersion}!g" \
         | sed "s!{{certAppVersion}}!${certAppVersion}!g" \
         | sed "s!{{operatorVersion}}!${operatorVersion}!g" \
         | sed "s!{{templateWarning}}!DO NOT MODIFY. This is produced by template.!g"
     }
 
     cat scripts/templates/Chart.yaml \
-        | applyTemplate > helm-charts/sonatype-nexus/Chart.yaml
+        | applyTemplate > helm-charts/sonatype-nexus-repository/Chart.yaml
 
     cat scripts/templates/values.yaml \
-        | applyTemplate > helm-charts/sonatype-nexus/values.yaml
+        | applyTemplate > helm-charts/sonatype-nexus-repository/values.yaml
 
     cat scripts/templates/Dockerfile \
         | applyTemplate > build/Dockerfile
