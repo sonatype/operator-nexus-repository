@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nexus-repository-ha-operator-certified
+subjects:
+- kind: ServiceAccount
+  name: nexus-repository-ha-operator-certified
+roleRef:
+  kind: Role
+  name: nexus-repository-ha-operator-certified
+  apiGroup: rbac.authorization.k8s.io

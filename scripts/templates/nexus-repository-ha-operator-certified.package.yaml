@@ -1,0 +1,7 @@
+# {{templateWarning}}
+---
+channels:
+  - currentCSV: nexus-repository-ha-operator-certified.v{{operatorVersion}}
+    name: stable
+defaultChannel: stable
+packageName: nexus-repository-ha-operator-certified

@@ -1,0 +1,43 @@
+# DO NOT MODIFY. This is produced by template.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus-repository-ha-operator-certified
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nexus-repository-ha-operator-certified
+  template:
+    metadata:
+      labels:
+        name: nexus-repository-ha-operator-certified
+    spec:
+      serviceAccountName: nexus-repository-ha-operator-certified
+      containers:
+        - name: nexus-repository-ha-operator-certified
+          # Replace this with the built image name
+          image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:4945ad993a10e27b358b2d9869d05f23ca761162ec088e5a833939022bc23192
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "nexus-repository-ha-operator-certified"
+            - name: RELATED_IMAGE_NEXUS
+              value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0

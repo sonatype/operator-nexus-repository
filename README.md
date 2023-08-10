@@ -7,7 +7,7 @@ IBM Operator for Sonatype Nexus Repository
 
 ### Local storage
 
-By default, this chart uses local volume storage. You'll need to create a directories
+By default, this chart uses local volume storage. You'll need to create directories
 on each node in your Kubernetes/Open shift cluster for storing nexus repository runtime (logs, config dump etc) data. 
 The following constraints should be adhered to regarding the names and number of directories to create on each node.
 
