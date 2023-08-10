@@ -2,6 +2,6 @@
 - version: v1alpha1
   group: sonatype.com
   kind: NexusRepo
-  chart: helm-charts/sonatype-nexus
+  chart: helm-charts/nxrm-ha
   overrideValues:
     nexus.imageName: $RELATED_IMAGE_NEXUS
