@@ -5,21 +5,8 @@ statefulset:
   name: nexusrepo-statefulset
   clusterName: nexusrepo-cluster
   replicaCount: 1
-  initContainer:
-    image:
-      repository: busybox
-      tag: 1.33.1
-    resources:
-      limits:
-        cpu: "0.2"
-        memory: "512Mi"
-      requests:
-        cpu: "0.1"
-        memory: "256Mi"
   container:
-    image:
-      repository: sonatype/nexus3
-      tag: 3.58.1
+    imageName: sonatype/nexus3:3.58.1
     resources:
       # See help documentation, these are minimum system requirements
       requests:
@@ -36,7 +23,7 @@ statefulset:
       install4jAddVmParams: "-Xms2703m -Xmx2703m"
       user: nexus
       password: nexus
-      jdbcUrl: jdbc:postgresql://localhost:5432/nexus
+      jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
       nexusInitialPassword: nexusabc
 ingress:
   name: nexus-ingress
@@ -51,18 +38,6 @@ ingress:
     enabled: false
     annotations:
       kubernetes.io/ingress.class: nginx
-workDir:
-  configMapName: create-nexus-workdir-config
-  daemonSetName: create-nexus-work-dir
-  workDirCreator:
-    initContainer:
-      image:
-        repository: ubuntu
-        tag: 23.04
-    container:
-      image:
-        repository: busybox
-        tag: 1.33.1
 nexusData:
   pv:
     directoryPrefix: /var/nexus-repo-mgr-work-dir/work
@@ -124,5 +99,3 @@ service:  #Nexus Repo NodePort Service
     protocol: TCP
     port: 9090
     targetPort: 8081
-
-

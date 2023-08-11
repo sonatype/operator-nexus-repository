@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.statefulset.container.terminationGracePeriod }}
       containers:
         - name: nxrm-app
-          image: {{ .Values.statefulset.container.image.repository }}:{{ .Values.statefulset.container.image.tag }}
+          image: {{ .Values.statefulset.container.imageName }}
           # See help documentation, these are minimum system requirements
           resources:
             {{ toYaml .Values.statefulset.container.resources | nindent 12 }}

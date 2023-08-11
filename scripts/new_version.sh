@@ -32,10 +32,10 @@ if [ "$1" = "image" ]; then
     }
 
     cat scripts/templates/Chart.yaml \
-        | applyTemplate > helm-charts/sonatype-nexus-repository/Chart.yaml
+        | applyTemplate > helm-charts/nxrm-ha/Chart.yaml
 
     cat scripts/templates/values.yaml \
-        | applyTemplate > helm-charts/sonatype-nexus-repository/values.yaml
+        | applyTemplate > helm-charts/nxrm-ha/values.yaml
 
     cat scripts/templates/Dockerfile \
         | applyTemplate > build/Dockerfile
