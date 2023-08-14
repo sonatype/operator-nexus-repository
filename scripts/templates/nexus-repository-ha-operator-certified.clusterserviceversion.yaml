@@ -5,117 +5,145 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "sonatype.com/v1alpha1",
+          "apiVersion": "sonatype.com.sonatype.com/v1alpha1",
           "kind": "NexusRepo",
           "metadata": {
-            "name": "example-nexusrepo"
+            "name": "nexusrepo-sample"
           },
           "spec": {
-            "config": {
-              "data": null,
-              "enabled": false,
-              "mountPath": "/sonatype-nexus-conf"
-            },
-            "deployment": {
-              "additionalContainers": null,
-              "additionalVolumeMounts": null,
-              "additionalVolumes": null,
-              "annotations": {},
-              "initContainers": null,
-              "postStart": {
-                "command": null
-              },
-              "preStart": {
-                "command": null
-              },
-              "terminationGracePeriodSeconds": 120
-            },
-            "deploymentStrategy": {
-              "type": "Recreate"
-            },
             "ingress": {
-              "annotations": {},
+              "annotations": {
+                "kubernetes.io/ingress.class": "nginx"
+              },
+              "dockerIngress": {
+                "annotations": {
+                  "kubernetes.io/ingress.class": "nginx"
+                },
+                "enabled": false,
+                "name": "nexus-docker-ingress"
+              },
+              "dockerSubdomain": false,
               "enabled": false,
-              "path": "/",
-              "rules": null,
-              "tls": {
+              "name": "nexus-ingress"
+            },
+            "license": {
+              "fileContentsBase64": "your_license_file_contents_in_base_64",
+              "secretName": "nexus-repo-license"
+            },
+            "namespaces": {
+              "nexusNs": "nexusrepo"
+            },
+            "nexusData": {
+              "local": {
+                "accessMode": "ReadWriteOnce",
                 "enabled": true,
-                "secretName": "nexus-tls"
+                "pv": {
+                  "name": "nexusrepo-local-storage-pv",
+                  "nodeAffinity": {
+                    "required": {
+                      "nodeSelectorTerms": [
+                        {
+                          "matchExpressions": [
+                            {
+                              "key": "kubernetes.io/hostname",
+                              "operator": "In",
+                              "values": [
+                                "example-node-1",
+                                "example-node-2",
+                                "example-node-3"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "size": "200Gi"
+                },
+                "storageClass": {
+                  "provisioner": "kubernetes.io/no-provisioner"
+                }
+              },
+              "nfs": {
+                "accessMode": "ReadWriteMany",
+                "enabled": false,
+                "pv": {
+                  "mountOptions": [
+                    "hard",
+                    "nfsvers=4.1"
+                  ],
+                  "mountPath": "/nexusdata/mountPath",
+                  "name": "nexusrepo-nfs-storage-pv",
+                  "server": {
+                    "ip": "70.71.156.85"
+                  },
+                  "size": "200Gi"
+                },
+                "pvc": {
+                  "accessModes": "ReadWriteMany"
+                },
+                "storageClass": {
+                  "provisioner": "nfs-prov"
+                }
+              },
+              "pv": {
+                "directoryPrefix": "/var/nexus-repo-mgr-work-dir/work"
+              },
+              "pvc": {
+                "size": "100Gi"
+              },
+              "storageClass": {
+                "name": "nexusrepo-storage",
+                "reclaimPolicy": "Retain"
               }
             },
-            "nexus": {
-              "dockerPort": 5003,
-              "env": [
-                {
-                  "name": "INSTALL4J_ADD_VM_PARAMS",
-                  "value": "-Xms2703M -Xmx2703M"
-                }
-              ],
-              "hostAliases": [],
-              "imageName": "{{certAppSHA}}",
-              "imagePullPolicy": "IfNotPresent",
-              "imagePullSecret": "",
-              "livenessProbe": {
-                "failureThreshold": 6,
-                "initialDelaySeconds": 30,
-                "path": "/",
-                "periodSeconds": 30
+            "service": {
+              "docker": {
+                "enabled": false,
+                "name": "nexus-repo-docker-service",
+                "port": 9090,
+                "protocol": "TCP",
+                "targetPort": 8081,
+                "type": "NodePort"
               },
-              "nexusPort": 8081,
-              "podAnnotations": {},
-              "readinessProbe": {
-                "failureThreshold": 6,
-                "initialDelaySeconds": 30,
-                "path": "/",
-                "periodSeconds": 30
-              },
-              "resources": {},
-              "securityContext": {
-              },
-              "service": {
+              "nexus": {
+                "enabled": false,
+                "name": "nexus-repo-service",
+                "port": 80,
+                "protocol": "TCP",
+                "targetPort": 8081,
                 "type": "NodePort"
               }
             },
-            "nexusProxyRoute": {
-              "annotations": null,
-              "enabled": false,
-              "labels": null
-            },
-            "persistence": {
-              "accessMode": "ReadWriteOnce",
-              "enabled": true,
-              "storageSize": "8Gi"
-            },
-            "replicaCount": 1,
-            "route": {
-              "annotations": null,
-              "enabled": false,
-              "labels": null,
-              "name": "docker",
-              "portName": "docker"
-            },
-            "secret": {
-              "data": null,
-              "enabled": false,
-              "mountPath": "/etc/secret-volume",
-              "readOnly": true
-            },
-            "service": {
-              "annotations": {},
-              "enabled": false,
-              "labels": {},
-              "ports": [
-                {
-                  "name": "nexus-service",
-                  "port": 80,
-                  "targetPort": 80
-                }
-              ]
-            },
             "statefulset": {
-              "enabled": false
-            },
-            "tolerations": []
+              "clusterName": "nexusrepo-cluster",
+              "container": {
+                "containerPort": 8081,
+                "env": {
+                  "clustered": true,
+                  "install4jAddVmParams": "-Xms2703m -Xmx2703m",
+                  "jdbcUrl": "jdbc:postgresql://your_database_server:5432/nexus",
+                  "nexusInitialPassword": "nexusabc",
+                  "password": "nexus",
+                  "user": "nexus"
+                },
+                "imageName": "{{certAppSHA}},
+                "pullPolicy": "IfNotPresent",
+                "resources": {
+                  "limits": {
+                    "cpu": 4,
+                    "memory": "8Gi"
+                  },
+                  "requests": {
+                    "cpu": 4,
+                    "memory": "8Gi"
+                  }
+                },
+                "terminationGracePeriod": 20
+              },
+              "name": "nexusrepo-statefulset",
+              "replicaCount": 1
+            }
           }
         }
       ]
@@ -125,8 +153,8 @@ metadata:
       Nexus Repository is the central source of control to efficiently manage all binaries
       and build artifacts across your DevOps pipeline.
     containerImage: {{operatorSHA}}
-    repository: https://github.com/sonatype/operator-nxrm3
-    createdAt: 2023-07-14
+    repository: https://github.com/sonatype/operator-nexus-repository
+    createdAt: 2023-08-14
     support: Sonatype
     certified: "true"
     olm.skipRange: "<{{operatorVersion}}"
@@ -172,8 +200,6 @@ spec:
 
     ## Limitations
 
-    High Availability Clustering (HA-C) is not supported for Nexus Repository Pro for OpenShift.
-
     This operator will be released on a quarterly basis.
 
     ## Controlling Automatic vs Manual Update
@@ -197,63 +223,6 @@ spec:
 
     | Parameter                                   | Description                         | Default                                 |
     | ------------------------------------------  | ----------------------------------  | ----------------------------------------|
-    | `statefulset.enabled`                       | Use statefulset instead of deployment | `false` |
-    | `deploymentStrategy.type`                   | Deployment Strategy     |  `Recreate` |
-    | `nexus.env`                                 | Nexus environment variables         | `See example.` |
-    | `nexus.resources`                           | Nexus resource requests and limits  | `{}`                                    |
-    | `nexus.dockerPort`                          | Port to access docker               | `5003`                                  |
-    | `nexus.nexusPort`                           | Internal port for Nexus service     | `8081`                                  |
-    | `nexus.service.type`                        | Service for Nexus                   |`NodePort`                                |
-    | `nexus.service.clusterIp`                   | Specific cluster IP when service type is cluster IP. Use None for headless service |`nil`   |
-    | `nexus.securityContext`                     | Security Context |
-    | `nexus.labels`                              | Service labels                      | `{}`                                    |
-    | `nexus.podAnnotations`                      | Pod Annotations                     | `{}`
-    | `nexus.livenessProbe.initialDelaySeconds`   | LivenessProbe initial delay         | 30                                      |
-    | `nexus.livenessProbe.periodSeconds`         | Seconds between polls               | 30                                      |
-    | `nexus.livenessProbe.failureThreshold`      | Number of attempts before failure   | 6                                       |
-    | `nexus.livenessProbe.timeoutSeconds`        | Time in seconds after liveness probe times out    | `nil`                     |
-    | `nexus.livenessProbe.path`                  | Path for LivenessProbe              | /                                       |
-    | `nexus.readinessProbe.initialDelaySeconds`  | ReadinessProbe initial delay        | 30                                      |
-    | `nexus.readinessProbe.periodSeconds`        | Seconds between polls               | 30                                      |
-    | `nexus.readinessProbe.failureThreshold`     | Number of attempts before failure   | 6                                       |
-    | `nexus.readinessProbe.timeoutSeconds`       | Time in seconds after readiness probe times out    | `nil`                    |
-    | `nexus.readinessProbe.path`                 | Path for ReadinessProbe             | /                                       |
-    | `nexus.hostAliases`                         | Aliases for IPs in /etc/hosts       | []                                      |
-    | `ingress.enabled`                           | Create an ingress for Nexus         | `true`                                  |
-    | `ingress.annotations`                       | Annotations to enhance ingress configuration  | `{}`                          |
-    | `ingress.tls.enabled`                       | Enable TLS                          | `true`                                 |
-    | `ingress.tls.secretName`                    | Name of the secret storing TLS cert, `false` to use the Ingress' default certificate | `nexus-tls`                             |
-    | `ingress.path`                              | Path for ingress rules. GCP users should set to `/*` | `/`                    |
-    | `tolerations`                               | tolerations list                    | `[]`                                    |
-    | `config.enabled`                            | Enable configmap                    | `false`                                 |
-    | `config.mountPath`                          | Path to mount the config            | `/sonatype-nexus-conf`                  |
-    | `config.data`                               | Configmap data                      | `nil`                                   |
-    | `deployment.terminationGracePeriodSeconds`  | Time to allow for clean shutdown    | 120                                     |
-    | `deployment.annotations`                    | Annotations to enhance deployment configuration  | `{}`                       |
-    | `deployment.initContainers`                 | Init containers to run before main containers  | `nil`                        |
-    | `deployment.postStart.command`              | Command to run after starting the nexus container  | `nil`                    |
-    | `deployment.preStart.command`               | Command to run before starting the nexus container  | `nil`                   |
-    | `deployment.additionalContainers`           | Add additional Container         | `nil`                                      |
-    | `deployment.additionalVolumes`              | Add additional Volumes           | `nil`                                      |
-    | `deployment.additionalVolumeMounts`         | Add additional Volume mounts     | `nil`                                      |
-    | `secret.enabled`                            | Enable secret                    | `false`                                    |
-    | `secret.mountPath`                          | Path to mount the secret         | `/etc/secret-volume`                       |
-    | `secret.readOnly`                           | Secret readonly state            | `true`                                     |
-    | `secret.data`                               | Secret data                      | `nil`                                      |
-    | `service.enabled`                           | Enable additional service        | `nil`                                      |
-    | `service.name`                              | Service name                     | `nil`                                      |
-    | `service.portName`                          | Service port name                | `nil`                                      |
-    | `service.labels`                            | Service labels                   | `nil`                                      |
-    | `service.annotations`                       | Service annotations              | `nil`                                      |
-    | `service.loadBalancerSourceRanges`          | Service LoadBalancer source IP whitelist | `nil`                              |
-    | `service.targetPort`                        | Service port                     | `nil`                                      |
-    | `service.port`                              | Port for exposing service        | `nil`                                      |
-    | `route.enabled`         | Set to true to create route for additional service | `false` |
-    | `route.name`            | Name of route                                      | `docker` |
-    | `route.portName`        | Target port name of service                        | `docker` |
-    | `route.labels`          | Labels to be added to route                        | `{}` |
-    | `route.annotations`     | Annotations to be added to route                   | `{}` |
-    | `route.path`            | Host name of Route e.g jenkins.example.com         | nil |
   displayName: Nexus Repository Operator
   icon:
     - base64data: "iVBORw0KGgoAAAANSUhEUgAAAHAAAACACAYAAADTcu1SAAAACXBI\
@@ -357,12 +326,15 @@ spec:
                 - ""
               resources:
                 - persistentvolumeclaims
+                - namespaces
+                - persistentvolumes
               verbs:
                 - '*'
             - apiGroups:
                 - apps
               resources:
                 - deployments
+                - statefulsets
               verbs:
                 - '*'
             - apiGroups:
@@ -378,6 +350,7 @@ spec:
                 - nexus-repository-ha-operator-certified
               resources:
                 - deployments/finalizers
+                - statefulsets/finalizers
               verbs:
                 - update
             - apiGroups:
@@ -390,9 +363,16 @@ spec:
                 - apps
               resources:
                 - replicasets
+                - statefulsets
                 - deployments
               verbs:
                 - get
+            - apiGroups:
+                - "storage.k8s.io"
+              resources:
+                - "storageclasses"
+              verbs:
+                - "*"
             - apiGroups:
                 - sonatype.com
               resources:

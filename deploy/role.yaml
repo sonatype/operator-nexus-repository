@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: nexus-repository-ha-operator-certified
@@ -28,12 +28,15 @@ rules:
   - ""
   resources:
   - persistentvolumeclaims
+  - "namespaces"
+  - "persistentvolumes"
   verbs:
   - '*'
 - apiGroups:
   - apps
   resources:
   - deployments
+  - statefulsets
   verbs:
   - '*'
 - apiGroups:
@@ -58,13 +61,6 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - apps
-  resources:
-  - replicasets
-  - deployments
-  verbs:
-  - get
-- apiGroups:
   - sonatype.com
   resources:
   - '*'
@@ -76,3 +72,9 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - "storage.k8s.io"
+  resources:
+  - "storageclasses"
+  verbs:
+    - "*"
