@@ -1,4 +1,5 @@
-# Declare variables to be passed into your templates.
+# DO NOT MODIFY. This is produced by template.
+---
 namespaces:
   nexusNs: nexusrepo
 statefulset:
@@ -6,7 +7,7 @@ statefulset:
   clusterName: nexusrepo-cluster
   replicaCount: 1
   container:
-    imageName: sonatype/nexus3:3.58.1
+    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.58.1-ubi-1
     resources:
       # See help documentation, these are minimum system requirements
       requests:
@@ -34,7 +35,7 @@ ingress:
     kubernetes.io/ingress.class: nginx
   dockerIngress:  #Ingress for Docker Connector - comment out if you don't use docker repositories
     name: nexus-docker-ingress
-#    host: "example.com"
+    #    host: "example.com"
     enabled: false
     annotations:
       kubernetes.io/ingress.class: nginx

@@ -4,4 +4,29 @@
   kind: NexusRepo
   chart: helm-charts/nxrm-ha
   overrideValues:
-    nexus.imageName: $RELATED_IMAGE_NEXUS
+    statefulset.container.imageName: $RELATED_IMAGE_NEXUS
+    statefulset.container.env.user: $NEXUS_DB_USER
+    statefulset.container.env.password: $NEXUS_DB_PASSWORD
+    statefulset.container.env.jdbcUrl: $NEXUS_DB_JDBC_RL
+    statefulset.container.env.nexusInitialPassword: $NEXUS_ADMIN_INITIAL_PASSWORD
+    license.fileContentsBase64: $NEXUS_LICENSE_BASE_64
+    statefulset.replicaCount: $NEXUS_POD_REPLICAS
+    local:
+      enabled: $LOCAL_PV_ENABLED
+      pv:
+        nodeAffinity:
+          required:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: $CLUSTER_NODE_NAMES_LIST #E.g [ "example-node-1", "example-node-2", "example-node-3" ]
+    nfs:
+      enabled: $NFS_PV_ENABLED
+      accessMode: ReadWriteMany
+      storageClass:
+        provisioner: $NFS_PROVISIONER
+      pv:
+        mountPath: $NFS_MOUNT_PATH #Path where blobs should be stored on your NFS drive
+        server:
+          ip: $NFS_SERVER_IP
