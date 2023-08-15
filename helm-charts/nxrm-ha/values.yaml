@@ -55,16 +55,10 @@ nexusData:
     pv:
       name: nexusrepo-local-storage-pv
       size: 200Gi
-      nodeAffinity:
-        required:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                    - "example-node-1"
-                    - "example-node-2"
-                    - "example-node-3"
+      matchNodes:
+        - "example-node-1"
+        - "example-node-2"
+        - "example-node-3"
   nfs:
     enabled: false
     accessMode: ReadWriteMany

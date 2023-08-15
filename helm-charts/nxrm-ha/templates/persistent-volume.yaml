@@ -14,9 +14,15 @@ spec:
   storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Release.Name }}-{{ $.Values.nexusData.storageClass.name }}
   local:
     path: {{ $.Values.nexusData.pv.directoryPrefix}}{{ $value }}
-  {{- with $.Values.nexusData.local.pv.nodeAffinity }}
+  {{- with $.Values.nexusData.local.pv.matchNodes }}
   nodeAffinity:
-    {{- toYaml . | nindent 4 }}
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                {{- toYaml . | nindent 16 }}
   {{- end }}
 {{- end }}
 ---

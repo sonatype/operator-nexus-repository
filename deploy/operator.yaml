@@ -18,7 +18,7 @@ spec:
       containers:
         - name: nexus-repository-ha-operator-certified
           # Replace this with the built image name
-          image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:4945ad993a10e27b358b2d9869d05f23ca761162ec088e5a833939022bc23192
+          image: oshiyanbade/test-operator:3.58.1-2
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -41,3 +41,17 @@ spec:
               value: "nexus-repository-ha-operator-certified"
             - name: RELATED_IMAGE_NEXUS
               value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0
+            - name: NEXUS_DB_USER
+              value: nexus
+            - name: NEXUS_DB_PASSWORD
+              value: nexus
+            - name: NEXUS_DB_JDBC_RL
+              value: <your jdbc url>
+            - name: NEXUS_ADMIN_INITIAL_PASSWORD
+              value: admin123
+            - name: NEXUS_POD_REPLICAS
+              value: "2"
+            - name: NEXUS_LICENSE_BASE_64
+              value: "your license"
+            - name: CLUSTER_NODE_NAMES
+              value: ["example-node-1", "example-node-2", "example-node-3" ]

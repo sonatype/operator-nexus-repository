@@ -1,4 +1,4 @@
-# {{templateWarning}}
+# DO NOT MODIFY. This is produced by template.
 ---
 apiVersion: sonatype.com/v1alpha1
 kind: NexusRepo
@@ -28,10 +28,16 @@ spec:
       enabled: true
       pv:
         name: nexusrepo-local-storage-pv
-        matchNodes:
-          - example-node-1
-          - example-node-2
-          - example-node-3
+        nodeAffinity:
+          required:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - example-node-1
+                      - example-node-2
+                      - example-node-3
         size: 200Gi
       storageClass:
         provisioner: kubernetes.io/no-provisioner
@@ -84,7 +90,7 @@ spec:
         nexusInitialPassword: nexusabc
         password: nexus
         user: nexus
-      imageName: {{certAppSHA}}
+      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0
       pullPolicy: IfNotPresent
       resources:
         limits:

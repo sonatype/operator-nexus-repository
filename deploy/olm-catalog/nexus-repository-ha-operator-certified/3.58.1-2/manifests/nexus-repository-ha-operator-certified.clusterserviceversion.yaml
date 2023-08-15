@@ -39,11 +39,25 @@ metadata:
                 "enabled": true,
                 "pv": {
                   "name": "nexusrepo-local-storage-pv",
-                  "matchNodes": [
-                    "example-node-1",
-                    "example-node-2",
-                    "example-node-3"
-                  ],
+                  "nodeAffinity": {
+                    "required": {
+                      "nodeSelectorTerms": [
+                        {
+                          "matchExpressions": [
+                            {
+                              "key": "kubernetes.io/hostname",
+                              "operator": "In",
+                              "values": [
+                                "example-node-1",
+                                "example-node-2",
+                                "example-node-3"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
                   "size": "200Gi"
                 },
                 "storageClass": {
@@ -113,7 +127,7 @@ metadata:
                   "password": "nexus",
                   "user": "nexus"
                 },
-                "imageName": "{{certAppSHA}},
+                "imageName": "registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0,
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
@@ -138,20 +152,20 @@ metadata:
     description: |-
       Nexus Repository is the central source of control to efficiently manage all binaries
       and build artifacts across your DevOps pipeline.
-    containerImage: {{operatorSHA}}
+    containerImage: oshiyanbade/test-operator:3.58.1-2
     repository: https://github.com/sonatype/operator-nexus-repository
     createdAt: 2023-08-14
     support: Sonatype
     certified: "true"
-    olm.skipRange: "<{{operatorVersion}}"
-  name: nexus-repository-ha-operator-certified.v{{operatorVersion}}
+    olm.skipRange: "<3.58.1-2"
+  name: nexus-repository-ha-operator-certified.v3.58.1-2
   namespace: placeholder
 spec:
   relatedImages:
     - name: nexus-repository-ha-operator-certified
-      image: {{operatorSHA}}
+      image: oshiyanbade/test-operator:3.58.1-2
     - name: nexus-repository-manager
-      image: {{certAppSHA}}
+      image: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
@@ -280,8 +294,8 @@ spec:
                       - name: OPERATOR_NAME
                         value: nexus-repository-ha-operator-certified
                       - name: RELATED_IMAGE_NEXUS
-                        value: {{certAppSHA}}
-                    image: {{operatorSHA}}
+                        value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:06fe31f40ff3fd7556fc7b8f6b2efe80ada1d9079ec9aaad60d1fdc0ee0677f0
+                    image: oshiyanbade/test-operator:3.58.1-2
                     imagePullPolicy: Always
                     name: nexus-repository-ha-operator-certified
                     resources: {}
@@ -394,4 +408,4 @@ spec:
   maturity: stable
   provider:
     name: Sonatype
-  version: {{operatorVersion}}
+  version: 3.58.1-2
