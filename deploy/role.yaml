@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: nexus-repository-ha-operator-certified
@@ -24,42 +24,10 @@ rules:
   - events
   verbs:
   - create
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  - "namespaces"
-  - "persistentvolumes"
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
-  - create
-- apiGroups:
-  - apps
-  resourceNames:
-  - nexus-repository-ha-operator-certified
-  resources:
-  - deployments/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
+
+  ##
+  ## Rules for sonatype.com/v1alpha1, Kind: NexusRepo
+  ##
 - apiGroups:
   - sonatype.com
   resources:
@@ -72,9 +40,62 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - "storage.k8s.io"
-  resources:
-  - "storageclasses"
-  verbs:
+- verbs:
     - "*"
+  apiGroups:
+    - "storage.k8s.io"
+  resources:
+    - "storageclasses"
+- verbs:
+    - "*"
+  apiGroups:
+    - ""
+  resources:
+    - "persistentvolumes"
+- verbs:
+    - "*"
+  apiGroups:
+    - ""
+  resources:
+    - "secrets"
+- verbs:
+    - "*"
+  apiGroups:
+    - "apps"
+  resources:
+    - "statefulsets"
+
+- apiGroups:
+    - ""
+  resources:
+    - secrets
+    - persistentvolumes
+  verbs:
+    - '*'
+- apiGroups:
+    - apps
+  resources:
+    - statefulsets
+  verbs:
+    - '*'
+- apiGroups:
+    - monitoring.coreos.com
+  resources:
+    - servicemonitors
+  verbs:
+    - get
+    - create
+- apiGroups:
+    - apps
+  resourceNames:
+    - nexus-repository-ha-operator-certified
+  resources:
+    - deployments/finalizers
+  verbs:
+    - update
+- apiGroups:
+    - ""
+  resources:
+    - pods
+  verbs:
+    - get

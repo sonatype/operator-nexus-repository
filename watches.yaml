@@ -11,9 +11,8 @@
     statefulset.container.env.nexusInitialPassword: $NEXUS_ADMIN_INITIAL_PASSWORD
     license.fileContentsBase64: $NEXUS_LICENSE_BASE_64
     statefulset.replicaCount: $NEXUS_POD_REPLICAS
-    nexusData.local.enabled: $LOCAL_PV_ENABLED
-    nexusData.local.pv.matchNodes: $CLUSTER_NODE_NAMES #E.g [ "example-node-1", "example-node-2", "example-node-3" ]
-    nexusData.nfs.enabled: $NFS_PV_ENABLED
+    nexusData.local.pv.matchNodes: $CLUSTER_NODE_NAMES #E.g "example-node-1 example-node-2 example-node-3"
     nexusData.nfs.storageClass.provisioner: $NFS_PROVISIONER
     nexusData.nfs.pv.mountPath: $NFS_MOUNT_PATH
     nexusData.nfs.pv.server.ip: $NFS_SERVER_IP
+    nexusData.pvc.accessModes: $PVC_ACCESS_MODES

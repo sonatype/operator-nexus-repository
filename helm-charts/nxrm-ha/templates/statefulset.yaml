@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Chart.Name }}-{{ .Chart.Version  | replace "." "-"}}-{{ .Values.statefulset.name }}
-  namespace: {{ .Values.namespaces.nexusNs }}
   labels:
     app: nxrm
 spec:
@@ -66,8 +65,8 @@ spec:
     - metadata:
         name: nexusdata
       spec:
-        accessModes: [ {{ .Values.nexusData.local.enabled | ternary "ReadWriteOnce" ".Values.nexusData.nfs.pvc.accessModes" }} ]
-        storageClassName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.nexusData.storageClass.name}}
+        accessModes: [ {{ .Values.nexusData.pvc.accessModes }} ]
+        storageClassName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Values.nexusData.storageClass.name}}
         resources:
           requests:
             storage: {{ .Values.nexusData.pvc.size }}

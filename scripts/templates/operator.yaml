@@ -41,3 +41,44 @@ spec:
               value: "nexus-repository-ha-operator-certified"
             - name: RELATED_IMAGE_NEXUS
               value: {{certAppSHA}}
+            - name: NEXUS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-secret
+                  key: nexusDatabaseUser
+            - name: NEXUS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-secret
+                  key: nexusDatabasePassword
+            - name: NEXUS_DB_JDBC_RL
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-secret
+                  key: nexusJdbcUrl
+            - name: NEXUS_ADMIN_INITIAL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-secret
+                  key: nexusInitialAdminPassword
+            - name: NEXUS_POD_REPLICAS
+              value: "2"
+            - name: NEXUS_LICENSE_BASE_64
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-secret
+                  key: nexus-repo-license
+            - name: NFS_PV_ENABLED
+              value: "false"
+            - name: LOCAL_PV_ENABLED
+              value: "true"
+            - name: NFS_PROVISIONER
+              value: "nfs provisioner"
+            - name: NFS_MOUNT_PATH
+              value: "nfs mount path"
+            - name: NFS_SERVER_IP
+              value: "nfs server ip"
+            - name: PVC_ACCESS_MODES
+              value: "ReadWriteOnce"
+            - name: CLUSTER_NODE_NAMES
+              value: "minikube lima-rancher-desktop crc-87z92-master-0"

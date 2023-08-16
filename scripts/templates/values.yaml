@@ -1,7 +1,5 @@
 # {{templateWarning}}
 ---
-namespaces:
-  nexusNs: nexusrepo
 statefulset:
   name: nexusrepo-statefulset
   clusterName: nexusrepo-cluster
@@ -44,6 +42,7 @@ nexusData:
     directoryPrefix: /var/nexus-repo-mgr-work-dir/work
   pvc:
     size: 100Gi
+    accessMode: ReadWriteOnce
   storageClass:
     name: nexusrepo-storage
     reclaimPolicy: Retain
@@ -55,15 +54,12 @@ nexusData:
     pv:
       name: nexusrepo-local-storage-pv
       size: 200Gi
-      matchNodes:
-        - "example-node-1"
-        - "example-node-2"
-        - "example-node-3"
+      matchNodes: "example-node-1 example-node-2 example-node-3"
   nfs:
     enabled: false
     accessMode: ReadWriteMany
     storageClass:
-      provisioner: nfs-prov
+      provisioner: nfs-provisioner
     pv:
       name: nexusrepo-nfs-storage-pv
       size: 200Gi
@@ -73,8 +69,6 @@ nexusData:
         - nfsvers=4.1
       server:
         ip: 70.71.156.85 #NFS server IP address
-    pvc:
-      accessModes: ReadWriteMany
 license:
   secretName: nexus-repo-license
   fileContentsBase64: your_license_file_contents_in_base_64

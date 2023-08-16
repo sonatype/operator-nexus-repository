@@ -30,20 +30,13 @@ metadata:
               "fileContentsBase64": "your_license_file_contents_in_base_64",
               "secretName": "nexus-repo-license"
             },
-            "namespaces": {
-              "nexusNs": "nexusrepo"
-            },
             "nexusData": {
               "local": {
                 "accessMode": "ReadWriteOnce",
                 "enabled": true,
                 "pv": {
+                  "matchNodes": "example-node-1 example-node-2 example-node-3",
                   "name": "nexusrepo-local-storage-pv",
-                  "matchNodes": [
-                    "example-node-1",
-                    "example-node-2",
-                    "example-node-3"
-                  ],
                   "size": "200Gi"
                 },
                 "storageClass": {
@@ -65,9 +58,6 @@ metadata:
                   },
                   "size": "200Gi"
                 },
-                "pvc": {
-                  "accessModes": "ReadWriteMany"
-                },
                 "storageClass": {
                   "provisioner": "nfs-prov"
                 }
@@ -76,6 +66,7 @@ metadata:
                 "directoryPrefix": "/var/nexus-repo-mgr-work-dir/work"
               },
               "pvc": {
+                "accessMode": "ReadWriteOnce",
                 "size": "100Gi"
               },
               "storageClass": {
@@ -113,7 +104,7 @@ metadata:
                   "password": "nexus",
                   "user": "nexus"
                 },
-                "imageName": "{{certAppSHA}},
+                "imageName": "{{certAppSHA}}",
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
@@ -286,7 +277,7 @@ spec:
                     name: nexus-repository-ha-operator-certified
                     resources: {}
                 serviceAccountName: nexus-repository-ha-operator-certified
-      permissions:
+      clusterPermissions:
         - rules:
             - apiGroups:
                 - ""
@@ -309,17 +300,33 @@ spec:
               verbs:
                 - create
             - apiGroups:
+              - sonatype.com
+              resources:
+                - "*"
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - storage.k8s.io
+              resources:
+                - storageclasses
+              verbs:
+                - '*'
+            - apiGroups:
                 - ""
               resources:
-                - persistentvolumeclaims
-                - namespaces
+                - secrets
                 - persistentvolumes
               verbs:
                 - '*'
             - apiGroups:
                 - apps
               resources:
-                - deployments
                 - statefulsets
               verbs:
                 - '*'
@@ -335,7 +342,6 @@ spec:
               resourceNames:
                 - nexus-repository-ha-operator-certified
               resources:
-                - deployments/finalizers
                 - statefulsets/finalizers
               verbs:
                 - update
@@ -348,29 +354,9 @@ spec:
             - apiGroups:
                 - apps
               resources:
-                - replicasets
                 - statefulsets
-                - deployments
               verbs:
                 - get
-            - apiGroups:
-                - "storage.k8s.io"
-              resources:
-                - "storageclasses"
-              verbs:
-                - "*"
-            - apiGroups:
-                - sonatype.com
-              resources:
-                - '*'
-              verbs:
-                - create
-                - delete
-                - get
-                - list
-                - patch
-                - update
-                - watch
           serviceAccountName: nexus-repository-ha-operator-certified
     strategy: deployment
   installModes:

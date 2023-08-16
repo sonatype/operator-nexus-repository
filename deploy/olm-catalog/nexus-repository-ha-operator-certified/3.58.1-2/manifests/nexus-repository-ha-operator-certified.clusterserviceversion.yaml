@@ -39,25 +39,11 @@ metadata:
                 "enabled": true,
                 "pv": {
                   "name": "nexusrepo-local-storage-pv",
-                  "nodeAffinity": {
-                    "required": {
-                      "nodeSelectorTerms": [
-                        {
-                          "matchExpressions": [
-                            {
-                              "key": "kubernetes.io/hostname",
-                              "operator": "In",
-                              "values": [
-                                "example-node-1",
-                                "example-node-2",
-                                "example-node-3"
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  },
+                  "matchNodes": [
+                    "example-node-1",
+                    "example-node-2",
+                    "example-node-3"
+                  ],
                   "size": "200Gi"
                 },
                 "storageClass": {
@@ -368,11 +354,18 @@ spec:
               verbs:
                 - get
             - apiGroups:
+                - "storage.k8s.io/v1"
                 - "storage.k8s.io"
               resources:
                 - "storageclasses"
               verbs:
-                - "*"
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
             - apiGroups:
                 - sonatype.com
               resources:

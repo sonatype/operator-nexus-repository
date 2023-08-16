@@ -20,18 +20,13 @@ spec:
   license:
     fileContentsBase64: your_license_file_contents_in_base_64
     secretName: nexus-repo-license
-  namespaces:
-    nexusNs: nexusrepo
   nexusData:
     local:
       accessMode: ReadWriteOnce
       enabled: true
       pv:
+        matchNodes: example-node-1 example-node-2 example-node-3
         name: nexusrepo-local-storage-pv
-        matchNodes:
-          - example-node-1
-          - example-node-2
-          - example-node-3
         size: 200Gi
       storageClass:
         provisioner: kubernetes.io/no-provisioner
@@ -47,13 +42,12 @@ spec:
         server:
           ip: 70.71.156.85
         size: 200Gi
-      pvc:
-        accessModes: ReadWriteMany
       storageClass:
         provisioner: nfs-prov
     pv:
       directoryPrefix: /var/nexus-repo-mgr-work-dir/work
     pvc:
+      accessMode: ReadWriteOnce
       size: 100Gi
     storageClass:
       name: nexusrepo-storage

@@ -11,10 +11,10 @@ spec:
   accessModes:
   - {{ $.Values.nexusData.local.accessMode }}
   persistentVolumeReclaimPolicy: {{ $.Values.nexusData.storageClass.reclaimPolicy }}
-  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Release.Name }}-{{ $.Values.nexusData.storageClass.name }}
+  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Values.nexusData.storageClass.name }}
   local:
     path: {{ $.Values.nexusData.pv.directoryPrefix}}{{ $value }}
-  {{- with $.Values.nexusData.local.pv.matchNodes }}
+  {{- with (splitList " " $.Values.nexusData.local.pv.matchNodes) }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -38,7 +38,7 @@ spec:
   accessModes:
     - {{ $.Values.nexusData.nfs.accessMode }}
   persistentVolumeReclaimPolicy: {{ $.Values.nexusData.storageClass.reclaimPolicy }}
-  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Release.Name }}-{{ $.Values.nexusData.storageClass.name }}
+  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Values.nexusData.storageClass.name }}
   {{- with $.Values.nexusData.nfs.pv.mountOptions }}
   mountOptions:
     {{- toYaml . | nindent 4 }}
