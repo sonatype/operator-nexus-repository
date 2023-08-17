@@ -61,45 +61,45 @@ spec:
                 secretKeyRef:
                   name: nexus-repository-secret
                   key: nexusInitialAdminPassword
-            - name: NEXUS_POD_REPLICAS
-              valueFrom:
-                secretKeyRef:
-                  name: nexus-repository-config
-                  key: nexus-pod-replicas
             - name: NEXUS_LICENSE_BASE_64
               valueFrom:
                 secretKeyRef:
                   name: nexus-repository-secret
                   key: nexus-repo-license
+            - name: NEXUS_POD_REPLICAS
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: nexus-pod-replicas
             - name: NFS_PV_ENABLED
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: nfs-enabled
             - name: LOCAL_PV_ENABLED
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: local-storage-enabled
             - name: NFS_PROVISIONER
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: nfs-provisioner
             - name: NFS_MOUNT_PATH
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: nfs-mount-path
             - name: NFS_SERVER_IP
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: nfs-server-ip
             - name: PVC_ACCESS_MODES
               value: "ReadWriteOnce"
             - name: CLUSTER_NODE_NAMES
               valueFrom:
-                secretKeyRef:
+                configMapKeyRef:
                   name: nexus-repository-config
                   key: node-names
