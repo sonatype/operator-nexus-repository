@@ -90,7 +90,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: nexus-repository-config
-                  key: mfs-mount-path
+                  key: nfs-mount-path
             - name: NFS_SERVER_IP
               valueFrom:
                 secretKeyRef:
