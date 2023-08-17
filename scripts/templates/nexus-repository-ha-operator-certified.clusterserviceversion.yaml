@@ -33,7 +33,7 @@ metadata:
             "nexusData": {
               "local": {
                 "accessMode": "ReadWriteOnce",
-                "enabled": true,
+                "enabled": "true",
                 "pv": {
                   "matchNodes": "example-node-1 example-node-2 example-node-3",
                   "name": "nexusrepo-local-storage-pv",
@@ -45,7 +45,7 @@ metadata:
               },
               "nfs": {
                 "accessMode": "ReadWriteMany",
-                "enabled": false,
+                "enabled": "false",
                 "pv": {
                   "mountOptions": [
                     "hard",
@@ -119,7 +119,7 @@ metadata:
                 "terminationGracePeriod": 20
               },
               "name": "nexusrepo-statefulset",
-              "replicaCount": 1
+              "replicaCount": 2
             }
           }
         }
@@ -200,7 +200,7 @@ spec:
 
     | Parameter                                   | Description                         | Default                                 |
     | ------------------------------------------  | ----------------------------------  | ----------------------------------------|
-  displayName: Nexus Repository Operator
+  displayName: Nexus Repository HA Operator
   icon:
     - base64data: "iVBORw0KGgoAAAANSUhEUgAAAHAAAACACAYAAADTcu1SAAAACXBI\
       WXMAACE3AAAhNwEzWJ96AAAHQklEQVR4nO2dMXLbOBSGXzLb2/1yJqzJIr5BnNpFf\
