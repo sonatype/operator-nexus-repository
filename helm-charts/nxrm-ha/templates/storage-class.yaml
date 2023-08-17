@@ -9,7 +9,7 @@ metadata:
 provisioner: {{ .Values.nexusData.local.storageClass.provisioner }}
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: {{ .Values.nexusData.storageClass.reclaimPolicy }}
-{{- end -}}
+{{- end }}
 ---
 {{- if and (eq $.Values.nexusData.nfs.enabled "true") (not (eq $.Values.nexusData.local.enabled "true")) }}
 apiVersion: storage.k8s.io/v1
