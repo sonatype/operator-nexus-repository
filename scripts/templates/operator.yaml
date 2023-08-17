@@ -71,14 +71,29 @@ spec:
             - name: NFS_PV_ENABLED
               value: "false"
             - name: LOCAL_PV_ENABLED
-              value: "true"
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-config
+                  key: local-storage-enabled
             - name: NFS_PROVISIONER
-              value: "nfs provisioner"
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-config
+                  key: nfs-provisioner
             - name: NFS_MOUNT_PATH
-              value: "nfs mount path"
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-config
+                  key: mfs-mount-path
             - name: NFS_SERVER_IP
-              value: "nfs server ip"
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-config
+                  key: nfs-server-ip
             - name: PVC_ACCESS_MODES
               value: "ReadWriteOnce"
             - name: CLUSTER_NODE_NAMES
-              value: "minikube lima-rancher-desktop crc-87z92-master-0"
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-repository-config
+                  key: node-names

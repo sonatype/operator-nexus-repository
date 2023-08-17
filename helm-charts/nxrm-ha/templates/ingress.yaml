@@ -41,7 +41,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: {{ .Values.namespaces.nexusNs }}
   name: {{ .Chart.Name }}-{{ .Values.ingress.dockerIngress.name }}
   {{- with .Values.ingress.dockerIngress.annotations }}
   annotations:

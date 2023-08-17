@@ -47,7 +47,7 @@ nexusData:
     name: nexusrepo-storage
     reclaimPolicy: Retain
   local:
-    enabled: true
+    enabled: "true"
     accessMode: ReadWriteOnce
     storageClass:
       provisioner: kubernetes.io/no-provisioner
@@ -56,7 +56,7 @@ nexusData:
       size: 200Gi
       matchNodes: "example-node-1 example-node-2 example-node-3"
   nfs:
-    enabled: false
+    enabled: "false"
     accessMode: ReadWriteMany
     storageClass:
       provisioner: nfs-provisioner
