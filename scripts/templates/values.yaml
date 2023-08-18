@@ -34,14 +34,12 @@ ingress:
     enabled: "false" #intentionally a string because it's used to configure operator via env variable
     secretName: "tlsSecretName"
   dockerSubdomain: false
-  annotations:
-    kubernetes.io/ingress.class: nginx
+  annotations: null
   dockerIngress:  #Ingress for Docker Connector - comment out if you don't use docker repositories
     name: nexus-docker-ingress
     host: "example.com"
     enabled: "false" #intentionally a string because it's used to configure operator via env variable
-    annotations:
-      kubernetes.io/ingress.class: nginx
+    annotations: null
 nexusData:
   pv:
     directoryPrefix: /var/nexus-repo-mgr-work-dir/work

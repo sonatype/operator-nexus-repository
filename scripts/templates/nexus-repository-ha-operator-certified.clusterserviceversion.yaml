@@ -13,14 +13,10 @@ metadata:
           "spec": {
             "ingress": {
               "additionalRules": null,
-              "annotations": {
-                "kubernetes.io/ingress.class": "nginx"
-              },
+              "annotations": null,
               "defaultRule": "false",
               "dockerIngress": {
-                "annotations": {
-                  "kubernetes.io/ingress.class": "nginx"
-                },
+                "annotations": null,
                 "enabled": "false",
                 "host": "example.com",
                 "name": "nexus-docker-ingress"
