@@ -9,12 +9,8 @@ metadata:
   {{- end }}
 spec:
   rules:
-    {{- if .Values.ingress.host }}
     - host: {{ .Values.ingress.host }}
       http:
-    {{- else }}
-    - http:
-    {{- end }}
         paths:
           - path: /
             pathType: Prefix
@@ -23,7 +19,8 @@ spec:
                 name: {{ .Chart.Name }}-{{ .Values.service.nexus.name }}
                 port:
                   number: {{ .Values.service.nexus.port }}
-    {{- if and .Values.ingress.host .Values.ingress.dockerSubdomain }}
+
+    {{- if .Values.ingress.dockerSubdomain }}
     - host: "*.{{ .Values.ingress.host }}"
       http:
         paths:
@@ -48,12 +45,8 @@ metadata:
   {{- end }}
 spec:
   rules:
-    {{- if .Values.ingress.dockerIngress.host }}
     - host: {{ .Values.ingress.dockerIngress.host }}
       http:
-    {{- else}}
-    - http:
-    {{- end }}
         paths:
           - path: /
             pathType: Prefix

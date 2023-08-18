@@ -27,13 +27,13 @@ statefulset:
 ingress:
   name: nexus-ingress
   enabled: "false" #intentionally a string because it's used to configure operator via env variable
-  #host: "example.com" #host to apply this ingress rule to. Uncomment this in your values.yaml and set it as you wish
+  host: "example.com"
   dockerSubdomain: false # uncomment this if you'd like to create a wildcard rule in your ingress for docker sub domain routing. You should also make sure your create routing rules in your load balancer for sub domains of your host. Thus, you must also uncomment and set the host
   annotations:
     kubernetes.io/ingress.class: nginx
   dockerIngress:  #Ingress for Docker Connector - comment out if you don't use docker repositories
     name: nexus-docker-ingress
-    #    host: "example.com"
+    host: "example.com"
     enabled: "false" #intentionally a string because it's used to configure operator via env variable
     annotations:
       kubernetes.io/ingress.class: nginx

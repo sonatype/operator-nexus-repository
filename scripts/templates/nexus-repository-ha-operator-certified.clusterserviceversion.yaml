@@ -19,11 +19,13 @@ metadata:
                 "annotations": {
                   "kubernetes.io/ingress.class": "nginx"
                 },
+                "host": "example.com",
                 "enabled": "false",
                 "name": "nexus-docker-ingress"
               },
               "dockerSubdomain": false,
               "enabled": "false",
+              "host": "example.com",
               "name": "nexus-ingress"
             },
             "license": {

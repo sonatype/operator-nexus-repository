@@ -21,4 +21,4 @@
     nexusData.pvc.accessModes: $PVC_ACCESS_MODES
     service.nexus.enabled: $NEXUS_SERVICE_ENABLED
     ingress.enabled: $NEXUS_INGRESS_ENABLED
-    route.enabled: $NEXUS_ROUTE_ENABLED
+    ingress.host: $NEXUS_INGRESS_HOST

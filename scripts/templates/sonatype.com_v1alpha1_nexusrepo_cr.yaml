@@ -13,9 +13,11 @@ spec:
       annotations:
         kubernetes.io/ingress.class: nginx
       enabled: "false"
+      host: example.com
       name: nexus-docker-ingress
     dockerSubdomain: false
     enabled: "false"
+    host: example.com
     name: nexus-ingress
   license:
     fileContentsBase64: your_license_file_contents_in_base_64

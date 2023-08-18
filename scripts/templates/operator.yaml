@@ -128,8 +128,8 @@ spec:
                 configMapKeyRef:
                   name: nexus-repository-config
                   key: nexus-ingress-enabled
-            - name: NEXUS_ROUTE_ENABLED
+            - name: NEXUS_INGRESS_HOST
               valueFrom:
                 configMapKeyRef:
                   name: nexus-repository-config
-                  key: nexus-route-enabled
+                  key: nexus-ingress-host
