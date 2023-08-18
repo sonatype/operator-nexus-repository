@@ -133,3 +133,8 @@ spec:
                 configMapKeyRef:
                   name: nexus-repository-config
                   key: nexus-ingress-host
+            - name: NEXUS_INGRESS_ADD_DEFAULT_RULE
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key:  nexus-ingress-add-defaultRule

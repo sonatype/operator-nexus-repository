@@ -9,6 +9,7 @@ metadata:
   {{- end }}
 spec:
   rules:
+    {{- if eq .Values.ingress.defaultRule "true" }}
     - host: {{ .Values.ingress.host }}
       http:
         paths:
@@ -19,7 +20,10 @@ spec:
                 name: {{ .Chart.Name }}-{{ .Values.service.nexus.name }}
                 port:
                   number: {{ .Values.service.nexus.port }}
-
+    {{- end }}
+    {{ - with .Values.ingress.additionalRules }}
+      {{ toYaml . | nindent 4 }}
+    {{ - end - }}
     {{- if .Values.ingress.dockerSubdomain }}
     - host: "*.{{ .Values.ingress.host }}"
       http:
@@ -32,6 +36,13 @@ spec:
                 port:
                   number: {{ .Values.service.nexus.port }}
     {{- end }}
+  {{ - if eq .Values.ingress.tls.enabled "true" }}
+  tls:
+    - hosts:
+      {{ - if .Values.ingress.tls.secretName }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+      {{ - end }}
+  {{ - end - }}
 {{- end }}
 ---
 {{- if eq .Values.ingress.dockerIngress.enabled "true" }}

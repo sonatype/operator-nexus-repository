@@ -12,21 +12,27 @@ metadata:
           },
           "spec": {
             "ingress": {
+              "additionalRules": null,
               "annotations": {
                 "kubernetes.io/ingress.class": "nginx"
               },
+              "defaultRule": "false",
               "dockerIngress": {
                 "annotations": {
                   "kubernetes.io/ingress.class": "nginx"
                 },
-                "host": "example.com",
                 "enabled": "false",
+                "host": "example.com",
                 "name": "nexus-docker-ingress"
               },
               "dockerSubdomain": false,
               "enabled": "false",
               "host": "example.com",
-              "name": "nexus-ingress"
+              "name": "nexus-ingress",
+              "tls": {
+                "enabled": "false",
+                "secretName": "tlsSecretName"
+              }
             },
             "license": {
               "fileContentsBase64": "your_license_file_contents_in_base_64",
@@ -75,9 +81,6 @@ metadata:
                 "name": "nexusrepo-storage",
                 "reclaimPolicy": "Retain"
               }
-            },
-            "route": {
-              "enabled": "false"
             },
             "service": {
               "docker": {
