@@ -19,11 +19,11 @@ metadata:
                 "annotations": {
                   "kubernetes.io/ingress.class": "nginx"
                 },
-                "enabled": false,
+                "enabled": "false",
                 "name": "nexus-docker-ingress"
               },
               "dockerSubdomain": false,
-              "enabled": false,
+              "enabled": "false",
               "name": "nexus-ingress"
             },
             "license": {
@@ -75,11 +75,11 @@ metadata:
               }
             },
             "route": {
-              "enabled": false
+              "enabled": "false"
             },
             "service": {
               "docker": {
-                "enabled": false,
+                "enabled": "false",
                 "name": "nexus-repo-docker-service",
                 "port": 9090,
                 "protocol": "TCP",
@@ -87,7 +87,7 @@ metadata:
                 "type": "NodePort"
               },
               "nexus": {
-                "enabled": false,
+                "enabled": "false",
                 "name": "nexus-repo-service",
                 "port": 80,
                 "protocol": "TCP",
@@ -107,7 +107,7 @@ metadata:
                   "password": "nexus",
                   "user": "nexus"
                 },
-                "imageName": "{{certAppSHA}}",
+                "imageName": "registry.connect.redhat.com/sonatype/nexus-repository-manager:3.58.1-ubi-1",
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
@@ -305,7 +305,9 @@ spec:
             - apiGroups:
               - sonatype.com
               resources:
-                - "*"
+                - nexusrepos
+                - nexusrepos/status
+                - nexusrepos/finalizers
               verbs:
                 - create
                 - delete
