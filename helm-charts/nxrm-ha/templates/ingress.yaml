@@ -21,9 +21,9 @@ spec:
                 port:
                   number: {{ .Values.service.nexus.port }}
     {{- end }}
-    {{ - with .Values.ingress.additionalRules }}
+    {{- with .Values.ingress.additionalRules }}
       {{ toYaml . | nindent 4 }}
-    {{ - end - }}
+    {{- end }}
     {{- if .Values.ingress.dockerSubdomain }}
     - host: "*.{{ .Values.ingress.host }}"
       http:
@@ -36,13 +36,13 @@ spec:
                 port:
                   number: {{ .Values.service.nexus.port }}
     {{- end }}
-  {{ - if eq .Values.ingress.tls.enabled "true" }}
+  {{- if eq .Values.ingress.tls.enabled "true" }}
   tls:
     - hosts:
-      {{ - if .Values.ingress.tls.secretName }}
+      {{- if .Values.ingress.tls.secretName }}
       secretName: {{ .Values.ingress.tls.secretName }}
-      {{ - end }}
-  {{ - end - }}
+      {{- end }}
+  {{- end }}
 {{- end }}
 ---
 {{- if eq .Values.ingress.dockerIngress.enabled "true" }}
