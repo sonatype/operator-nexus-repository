@@ -118,4 +118,18 @@ spec:
                 configMapKeyRef:
                   name: nexus-repository-config
                   key: storage-reclaim-policy
-
+            - name: NEXUS_SERVICE_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: nexus-service-enabled
+            - name: NEXUS_INGRESS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: nexus-ingress-enabled
+            - name: NEXUS_ROUTE_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: nexus-route-enabled

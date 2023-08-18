@@ -3,7 +3,7 @@
 statefulset:
   name: nexusrepo-statefulset
   clusterName: nexusrepo-cluster
-  replicaCount: 1
+  replicaCount: 2
   container:
     imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:{{certAppVersion}}
     resources:

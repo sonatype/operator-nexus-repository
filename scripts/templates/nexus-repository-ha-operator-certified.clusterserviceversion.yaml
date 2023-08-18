@@ -59,7 +59,7 @@ metadata:
                   "size": "200Gi"
                 },
                 "storageClass": {
-                  "provisioner": "nfs-prov"
+                  "provisioner": "nfs-provisioner"
                 }
               },
               "pv": {
@@ -73,6 +73,9 @@ metadata:
                 "name": "nexusrepo-storage",
                 "reclaimPolicy": "Retain"
               }
+            },
+            "route": {
+              "enabled": false
             },
             "service": {
               "docker": {
