@@ -31,7 +31,9 @@ rules:
 - apiGroups:
   - sonatype.com
   resources:
-  - '*'
+  - nexusrepos
+  - nexusrepos/status
+  - nexusrepos/finalizers
   verbs:
   - create
   - delete
@@ -58,24 +60,24 @@ rules:
     - ""
   resources:
     - "secrets"
+    - "services"
 - verbs:
     - "*"
   apiGroups:
     - "apps"
   resources:
     - "statefulsets"
-
+- verbs:
+    - "*"
+  apiGroups:
+    - "networking.k8s.io"
+  resources:
+    - "ingresses"
 - apiGroups:
     - ""
   resources:
     - secrets
     - persistentvolumes
-  verbs:
-    - '*'
-- apiGroups:
-    - apps
-  resources:
-    - statefulsets
   verbs:
     - '*'
 - apiGroups:
@@ -91,6 +93,7 @@ rules:
     - nexus-repository-ha-operator-certified
   resources:
     - deployments/finalizers
+    - statefulsets/finalizers
   verbs:
     - update
 - apiGroups:
