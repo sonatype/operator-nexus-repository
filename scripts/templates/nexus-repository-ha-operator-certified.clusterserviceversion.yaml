@@ -5,7 +5,7 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "sonatype.com.sonatype.com/v1alpha1",
+          "apiVersion": "sonatype.com/v1alpha1",
           "kind": "NexusRepo",
           "metadata": {
             "name": "nexusrepo-sample"
