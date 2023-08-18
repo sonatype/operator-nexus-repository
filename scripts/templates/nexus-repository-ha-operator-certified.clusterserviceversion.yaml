@@ -276,6 +276,103 @@ spec:
                         value: nexus-repository-ha-operator-certified
                       - name: RELATED_IMAGE_NEXUS
                         value: {{certAppSHA}}
+                      - name: NEXUS_DB_USER
+                        valueFrom:
+                          secretKeyRef:
+                            name: nexus-repository-secret
+                            key: nexusDatabaseUser
+                      - name: NEXUS_DB_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: nexus-repository-secret
+                            key: nexusDatabasePassword
+                      - name: NEXUS_DB_JDBC_RL
+                        valueFrom:
+                          secretKeyRef:
+                            name: nexus-repository-secret
+                            key: nexusJdbcUrl
+                      - name: NEXUS_ADMIN_INITIAL_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: nexus-repository-secret
+                            key: nexusInitialAdminPassword
+                      - name: NEXUS_LICENSE_BASE_64
+                        valueFrom:
+                          secretKeyRef:
+                            name: nexus-repository-secret
+                            key: nexus-repo-license
+                      - name: NEXUS_POD_REPLICAS
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nexus-pod-replicas
+                      - name: NFS_PV_ENABLED
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nfs-enabled
+                      - name: LOCAL_PV_ENABLED
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: local-storage-enabled
+                      - name: NFS_PROVISIONER
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nfs-provisioner
+                      - name: NFS_MOUNT_PATH
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nfs-mount-path
+                      - name: NFS_SERVER_IP
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nfs-server-ip
+                      - name: PVC_ACCESS_MODES
+                        value: "ReadWriteOnce"
+                      - name: CLUSTER_NODE_NAMES
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: node-names
+                      - name: LOCAL_PV_SIZE
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: local-pv-size
+                      - name: PVC_SIZE
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: pvc-size
+                      - name: STORAGE_RECLAIM_POLICY
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: storage-reclaim-policy
+                      - name: NEXUS_SERVICE_ENABLED
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nexus-service-enabled
+                      - name: NEXUS_INGRESS_ENABLED
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nexus-ingress-enabled
+                      - name: NEXUS_INGRESS_HOST
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nexus-ingress-host
+                      - name: NEXUS_INGRESS_ADD_DEFAULT_RULE
+                        valueFrom:
+                          configMapKeyRef:
+                            name: nexus-repository-config
+                            key: nexus-ingress-add-defaultRule
                     image: {{operatorSHA}}
                     imagePullPolicy: Always
                     name: nexus-repository-ha-operator-certified
