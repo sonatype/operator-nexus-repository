@@ -12,6 +12,9 @@
     license.fileContentsBase64: $NEXUS_LICENSE_BASE_64
     statefulset.replicaCount: $NEXUS_POD_REPLICAS
     nexusData.local.pv.matchNodes: $CLUSTER_NODE_NAMES #E.g "example-node-1 example-node-2 example-node-3"
+    nexusData.local.pv.size: $LOCAL_PV_SIZE
+    nexusData.pvc.size: $PVC_SIZE
+    nexusData.storageClass.reclaimPolicy: $STORAGE_RECLAIM_POLICY
     nexusData.nfs.storageClass.provisioner: $NFS_PROVISIONER
     nexusData.nfs.pv.mountPath: $NFS_MOUNT_PATH
     nexusData.nfs.pv.server.ip: $NFS_SERVER_IP

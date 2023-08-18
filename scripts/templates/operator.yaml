@@ -103,3 +103,19 @@ spec:
                 configMapKeyRef:
                   name: nexus-repository-config
                   key: node-names
+            - name: LOCAL_PV_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: local-pv-size
+            - name: PVC_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: pvc-size
+            - name: STORAGE_RECLAIM_POLICY
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: storage-reclaim-policy
+
