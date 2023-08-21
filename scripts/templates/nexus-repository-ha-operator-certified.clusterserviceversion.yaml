@@ -266,13 +266,12 @@ spec:
     
     
     ### Additional configuration
-    * Once the server instance is created by the operator and running, you'll want to expose the service as you see fit:
-    1. Create a Route to that service for nexus.port (8081). The operator contains an Ingress resource that you can use for this. The Ingress resource can be enabled by setting  `.ingress.enabled` to "true".
-
-    * The Nexus Repository can be further configured via the NexusRepo custom resource definition:
+    * Once the server instance is created by the operator and running, Nexus Repository can be further configured via the NexusRepo custom resource:
 
     | Parameter                                   | Description                         | Default                                 |
     | ------------------------------------------  | ----------------------------------  | ----------------------------------------|
+    
+
   displayName: Nexus Repository HA Operator
   icon:
     - base64data: "iVBORw0KGgoAAAANSUhEUgAAAHAAAACACAYAAADTcu1SAAAACXBI\

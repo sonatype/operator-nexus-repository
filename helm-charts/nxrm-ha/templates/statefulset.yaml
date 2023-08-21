@@ -65,7 +65,7 @@ spec:
     - metadata:
         name: nexusdata
       spec:
-        accessModes: [ {{ .Values.nexusData.pvc.accessModes }} ]
+        accessModes: [ {{ .Values.nexusData.pvc.accessMode }} ]
         storageClassName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Values.nexusData.storageClass.name}}
         resources:
           requests:

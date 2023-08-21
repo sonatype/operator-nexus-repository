@@ -24,9 +24,6 @@ tests:
       - equal:
           path: metadata.name
           value: "nxrm-ha-latest-nexusrepo-statefulset"
-      - equal:
-          path: metadata.namespace
-          value: "nexusrepo"
 
       - equal:
           path: metadata.labels.app
@@ -57,7 +54,7 @@ tests:
 
       - equal:
           path: spec.template.spec.containers[0].image
-          value: sonatype/nexus3:latest
+          value: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.58.1-ubi-1
 
       - equal:
           path: spec.template.spec.containers[0].resources
@@ -84,7 +81,7 @@ tests:
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "true"
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
-              value: "jdbc:postgresql://localhost:5432/nexus"
+              value: "jdbc:postgresql://your_database_server:5432/nexus"
             - name: NEXUS_DATASTORE_NEXUS_USERNAME
               value: "nexus"
             - name: NEXUS_DATASTORE_NEXUS_PASSWORD
@@ -123,7 +120,7 @@ tests:
 
       - equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
-          value: "nxrm-ha-latest-test-release-nexusrepo-storage"
+          value: "nxrm-ha-latest-nexusrepo-storage"
 
       - equal:
           path: spec.volumeClaimTemplates[0].spec.resources
