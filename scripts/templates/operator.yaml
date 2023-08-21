@@ -97,7 +97,10 @@ spec:
                   name: nexus-repository-config
                   key: nfs-server-ip
             - name: PVC_ACCESS_MODES
-              value: "ReadWriteOnce"
+              valueFrom:
+                configMapKeyRef:
+                  name: nexus-repository-config
+                  key: pvc-access-mode
             - name: CLUSTER_NODE_NAMES
               valueFrom:
                 configMapKeyRef:
