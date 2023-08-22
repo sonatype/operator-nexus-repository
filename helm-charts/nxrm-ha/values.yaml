@@ -24,6 +24,18 @@ statefulset:
       password: nexus
       jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
       nexusInitialPassword: nexusabc
+  livenessProbe:
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    path: /
+    periodSeconds: 30
+  nexusPort: 8081
+  podAnnotations: { }
+  readinessProbe:
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    path: /
+    periodSeconds: 30
   imagePullSecret:
     name: "nexus-image-pull-secret"
     secret: ""
