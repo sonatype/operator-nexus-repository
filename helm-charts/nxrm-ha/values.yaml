@@ -30,7 +30,6 @@ statefulset:
     path: /
     periodSeconds: 30
   nexusPort: 8081
-  podAnnotations: { }
   readinessProbe:
     failureThreshold: 6
     initialDelaySeconds: 30
