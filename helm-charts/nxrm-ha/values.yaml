@@ -24,6 +24,9 @@ statefulset:
       password: nexus
       jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
       nexusInitialPassword: nexusabc
+  imagePullSecret:
+    name: "nexus-image-pull-secret"
+    secret: ""
 ingress:
   name: nexus-ingress
   enabled: "false" #intentionally a string because it's used to configure operator via env variable
