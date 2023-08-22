@@ -122,10 +122,7 @@ metadata:
                 },
                 "terminationGracePeriod": 20
               },
-              "imagePullSecret": {
-                "name": "nexus-image-pull-secret",
-                "secret": ""
-              },
+              "imagePullSecret": {},
               "livenessProbe": {
                 "failureThreshold": 6,
                 "initialDelaySeconds": 30,

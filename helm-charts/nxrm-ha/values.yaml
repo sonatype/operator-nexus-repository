@@ -34,9 +34,7 @@ statefulset:
     initialDelaySeconds: 30
     path: /
     periodSeconds: 30
-  imagePullSecret:
-    name: "nexus-image-pull-secret"
-    secret: ""
+  imagePullSecret: {}
 ingress:
   name: nexus-ingress
   enabled: "false" #intentionally a string because it's used to configure operator via env variable
