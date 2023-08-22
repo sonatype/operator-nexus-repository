@@ -29,7 +29,6 @@ statefulset:
     initialDelaySeconds: 30
     path: /
     periodSeconds: 30
-  nexusPort: 8081
   readinessProbe:
     failureThreshold: 6
     initialDelaySeconds: 30

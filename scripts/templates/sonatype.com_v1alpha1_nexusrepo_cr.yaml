@@ -93,5 +93,18 @@ spec:
           cpu: 4
           memory: 8Gi
       terminationGracePeriod: 20
+    imagePullSecret:
+      name: nexus-image-pull-secret
+      secret: ""
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
     name: nexusrepo-statefulset
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
     replicaCount: 2
