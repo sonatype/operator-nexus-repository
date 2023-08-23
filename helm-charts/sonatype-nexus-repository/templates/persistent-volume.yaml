@@ -38,7 +38,7 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   nfs:
-    path: {{ $.Values.nexusData.nfs.pv.mountPath }}
-    server: {{ $.Values.nexusData.nfs.pv.server.ip }}
+    path: {{ $.Values.nexusData.nfs.pv.mountPath }}-{{ $value }}
+    server: {{ $.Values.nexusData.nfs.pv.server.ip }}-{{ $value }}
 {{- end }}
 {{- end }}

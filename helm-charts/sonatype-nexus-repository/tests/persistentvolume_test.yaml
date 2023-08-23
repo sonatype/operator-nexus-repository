@@ -119,6 +119,8 @@ tests:
 
   - it: should create nfs persistent volumes
     set:
+      statefulset:
+        replicaCount: 2
       nexusData:
         local:
           enabled: false
@@ -130,6 +132,12 @@ tests:
       - equal:
           path: metadata.name
           value: "nexusrepo-nfs-storage-pv-0"
+        documentIndex: 0
+
+      - equal:
+          path: metadata.name
+          value: "nexusrepo-nfs-storage-pv-1"
+        documentIndex: 1
 
       - equal:
           path: spec.capacity.storage
@@ -160,8 +168,20 @@ tests:
 
       - equal:
           path: spec.nfs.path
-          value: /nexusdata/mountPath
+          value: /var/nexus-repo-mgr-work-dir/work-0
+        documentIndex: 0
+
+      - equal:
+          path: spec.nfs.path
+          value: /var/nexus-repo-mgr-work-dir/work-1
+        documentIndex: 1
 
       - equal:
           path: spec.nfs.server
-          value: 70.71.156.85
+          value: 70.71.156.85/nexus-repo-mgr-work/work-0
+        documentIndex: 0
+
+      - equal:
+          path: spec.nfs.server
+          value: 70.71.156.85/nexus-repo-mgr-work/work-1
+        documentIndex: 1

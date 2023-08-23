@@ -97,12 +97,12 @@ nexusData:
     pv:
       name: nexusrepo-nfs-storage-pv
       size: 200Gi
-      mountPath: /nexusdata/mountPath
+      mountPath: /var/nexus-repo-mgr-work-dir/work
       mountOptions:
         - hard
         - nfsvers=4.1
       server:
-        ip: 70.71.156.85 #NFS server IP address
+        ip: 70.71.156.85/nexus-repo-mgr-work/work #NFS server IP address
     pvc:
       accessModes: ReadWriteMany
 license:
