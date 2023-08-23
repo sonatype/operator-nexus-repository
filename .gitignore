@@ -3,3 +3,4 @@ bundle
 *-metadata.zip
 artifacts
 *.log
+.DS_STORE
