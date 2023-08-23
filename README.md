@@ -11,7 +11,7 @@ By default, this chart uses local volume storage. You'll need to create director
 on each node in your Kubernetes/Open shift cluster for storing nexus repository runtime (logs, config dump etc) data. 
 The following constraints should be adhered to regarding the names and number of directories to create on each node.
 
-* The directory names must have the prefix specified for the ```nexusData.pv.directoryPrefix``` specified in the [values.yaml](helm-charts%2Fnxrm-ha%2Fvalues.yaml). It is best for this to be a sub dorectory of ```/var``` 
+* The directory names must have the prefix specified for the ```nexusData.pv.directoryPrefix``` specified in the [values.yaml](helm-charts%2Fnxrm-ha%2Fvalues.yaml). It is best for this to be a sub directory of ```/var``` 
 
 * The directory names must have an integer as the suffix beginning with 0.
 
