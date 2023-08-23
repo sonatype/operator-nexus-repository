@@ -97,7 +97,7 @@ nexusData:
     pv:
       name: nexusrepo-nfs-storage-pv
       size: 200Gi
-      mountPath: /nexusdata/mountPath #Path where blobs should be stored on your NFS drive
+      mountPath: /nexusdata/mountPath
       mountOptions:
         - hard
         - nfsvers=4.1
