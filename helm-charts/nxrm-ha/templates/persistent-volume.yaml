@@ -27,6 +27,7 @@ spec:
 {{- end }}
 ---
 {{- if and (eq $.Values.nexusData.nfs.enabled "true") (not (eq $.Values.nexusData.local.enabled "true")) }}
+{{- $serverPaths := (splitList " " $.Values.nexusData.nfs.pv.exportedServerPaths) }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -44,7 +45,7 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   nfs:
-    path: {{ $.Values.nexusData.nfs.pv.mountPath }}
+    path: {{ index $serverPaths $value }}
     server: {{ $.Values.nexusData.nfs.pv.server.ip }}
 {{- end }}
 {{- end }}

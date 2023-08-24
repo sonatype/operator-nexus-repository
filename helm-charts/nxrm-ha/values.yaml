@@ -34,7 +34,7 @@ statefulset:
     initialDelaySeconds: 30
     path: /
     periodSeconds: 30
-  imagePullSecret: {}
+  imagePullSecrets: {}
 ingress:
   name: nexus-ingress
   enabled: "false" #intentionally a string because it's used to configure operator via env variable
@@ -77,7 +77,7 @@ nexusData:
     pv:
       name: nexusrepo-nfs-storage-pv
       size: 200Gi
-      mountPath: /nexusdata/mountPath
+      exportedServerPaths: "/serverPath1 /serverPath2 /serverPath3"
       mountOptions:
         - hard
         - nfsvers=4.1

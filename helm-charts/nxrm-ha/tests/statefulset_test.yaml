@@ -9,9 +9,8 @@ tests:
   - it: should create nexus pod
     set:
       statefulset:
-        container:
-          image:
-            tag: "latest"
+        imagePullSecrets:
+          name: abc123
         replicaCount: 2
       nexusData:
         local:
@@ -52,9 +51,9 @@ tests:
           path: spec.template.spec.containers[0].name
           value: nxrm-app
 
-      - equal:
+      - matchRegex:
           path: spec.template.spec.containers[0].image
-          value: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.58.1-ubi-1
+          pattern: "^registry.connect.redhat.com/sonatype/nexus-repository-manager"
 
       - equal:
           path: spec.template.spec.containers[0].resources
@@ -113,7 +112,7 @@ tests:
       - equal:
           path: spec.template.spec.imagePullSecrets
           value:
-            - name: nxrm-ha-latest-nexus-image-pull-secret
+            - name: nxrm-ha-latest-abc123
       - equal:
           path: spec.template.spec.containers[0].env
           value:

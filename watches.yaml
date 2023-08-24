@@ -16,7 +16,7 @@
     nexusData.pvc.size: $PVC_SIZE
     nexusData.storageClass.reclaimPolicy: $STORAGE_RECLAIM_POLICY
     nexusData.nfs.storageClass.provisioner: $NFS_PROVISIONER
-    nexusData.nfs.pv.mountPath: $NFS_MOUNT_PATH
+    nexusData.nfs.pv.exportedServerPaths: $NFS_EXPORTED_SERVER_PATHS
     nexusData.nfs.pv.server.ip: $NFS_SERVER_IP
     nexusData.pvc.accessModes: $PVC_ACCESS_MODES
     service.nexus.enabled: $NEXUS_SERVICE_ENABLED

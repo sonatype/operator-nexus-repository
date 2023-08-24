@@ -168,7 +168,13 @@ tests:
 
       - equal:
           path: spec.nfs.path
-          value: /nexusdata/mountPath
+          value: /serverPath1
+        documentIndex: 0
+
+      - equal:
+          path: spec.nfs.path
+          value: /serverPath2
+        documentIndex: 1
 
       - equal:
           path: spec.nfs.server

@@ -250,7 +250,7 @@ spec:
     | `nexus-ingress-host                         |  The Ingress host setting                                                                                                                                   | 
     | `nfs-enabled                                |  Whether to use NFS storage for the Nexus Repository pods. Set to "true" to enable, set to "false" to disable.                                              | 
     | `nfs-provisioner`                           |  An NFS sub directory provisioner                                                                                                                           | 
-    | `nfs-mount-path`                            |  The location to mount NFS                                                                                                                                  | 
+    | `nfs-exported-server-paths`                 |  The exported paths on the NFS server. This should be a space delmited string e.g. "/exportedPath1 /exportedPath2 /exportedPath3"                           | 
     | `nfs-server-ip`                             |  The NFS server address                                                                                                                                     |
    
     **Note: the `local-storage-enabled` and `nfs-enabled` settings are mutually exclusive.**
