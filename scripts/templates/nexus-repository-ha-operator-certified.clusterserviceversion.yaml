@@ -51,11 +51,11 @@ metadata:
                 "accessMode": "ReadWriteMany",
                 "enabled": "false",
                 "pv": {
+                  "exportedServerPaths": "/serverPath1 /serverPath2 /serverPath3",
                   "mountOptions": [
                     "hard",
                     "nfsvers=4.1"
                   ],
-                  "mountPath": "/nexusdata/mountPath",
                   "name": "nexusrepo-nfs-storage-pv",
                   "server": {
                     "ip": "70.71.156.85"
@@ -108,7 +108,7 @@ metadata:
                   "password": "nexus",
                   "user": "nexus"
                 },
-                "imageName": "registry.connect.redhat.com/sonatype/nexus-repository-manager:3.58.1-ubi-1",
+                "imageName": "{{certAppSHA}}",
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
@@ -122,7 +122,7 @@ metadata:
                 },
                 "terminationGracePeriod": 20
               },
-              "imagePullSecret": {},
+              "imagePullSecrets": {},
               "livenessProbe": {
                 "failureThreshold": 6,
                 "initialDelaySeconds": 30,
@@ -270,7 +270,7 @@ spec:
         node-names: "node-87z92-master-0 node-87z92-master-1 node-87z92-master-2"
         nfs-enabled: "false"
         nfs-provisioner: "nfs-provisioner"
-        nfs-mount-path: "nfs-mount-path"
+        nfs-exported-server-paths: "/serverPath1 /serverPath2 /serverPath3"
         nfs-server-ip: "nfs-server-ip"
         nexus-service-enabled: "true"
         nexus-ingress-enabled: "true"
