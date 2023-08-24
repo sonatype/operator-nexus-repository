@@ -39,10 +39,10 @@ spec:
       accessMode: ReadWriteMany
       enabled: "false"
       pv:
+        exportedServerPaths: /serverPath1 /serverPath2 /serverPath3
         mountOptions:
           - hard
           - nfsvers=4.1
-        mountPath: /nexusdata/mountPath
         name: nexusrepo-nfs-storage-pv
         server:
           ip: 70.71.156.85
@@ -93,7 +93,7 @@ spec:
           cpu: 4
           memory: 8Gi
       terminationGracePeriod: 20
-    imagePullSecret: {}
+    imagePullSecrets: {}
     livenessProbe:
       failureThreshold: 6
       initialDelaySeconds: 30
