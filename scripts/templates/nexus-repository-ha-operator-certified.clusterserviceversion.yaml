@@ -402,11 +402,11 @@ spec:
                           configMapKeyRef:
                             name: nexus-repository-config
                             key: nfs-provisioner
-                      - name: NFS_MOUNT_PATH
+                      - name: NFS_EXPORTED_SERVER_PATHS
                         valueFrom:
                           configMapKeyRef:
                             name: nexus-repository-config
-                            key: nfs-mount-path
+                            key: nfs-exported-server-paths
                       - name: NFS_SERVER_IP
                         valueFrom:
                           configMapKeyRef:
