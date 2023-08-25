@@ -26,14 +26,14 @@ statefulset:
       nexusInitialPassword: nexusabc
   livenessProbe:
     failureThreshold: 6
-    initialDelaySeconds: 30
+    initialDelaySeconds: 240
     path: /
-    periodSeconds: 30
+    periodSeconds: 60
   readinessProbe:
     failureThreshold: 6
-    initialDelaySeconds: 30
+    initialDelaySeconds: 240
     path: /
-    periodSeconds: 30
+    periodSeconds: 60
   imagePullSecrets: {}
 ingress:
   name: nexus-ingress

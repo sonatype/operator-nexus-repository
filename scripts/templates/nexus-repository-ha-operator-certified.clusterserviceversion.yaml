@@ -125,16 +125,16 @@ metadata:
               "imagePullSecrets": {},
               "livenessProbe": {
                 "failureThreshold": 6,
-                "initialDelaySeconds": 30,
+                "initialDelaySeconds": 240,
                 "path": "/",
-                "periodSeconds": 30
+                "periodSeconds": 60
               },
               "name": "nexusrepo-statefulset",
               "readinessProbe": {
                 "failureThreshold": 6,
-                "initialDelaySeconds": 30,
+                "initialDelaySeconds": 240,
                 "path": "/",
-                "periodSeconds": 30
+                "periodSeconds": 60
               },
               "replicaCount": 2
             }
