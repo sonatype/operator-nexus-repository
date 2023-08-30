@@ -73,7 +73,6 @@ spec:
       targetPort: 8081
       type: NodePort
   statefulset:
-    clusterName: nexusrepo-cluster
     container:
       containerPort: 8081
       env:
@@ -92,7 +91,7 @@ spec:
         requests:
           cpu: 4
           memory: 8Gi
-      terminationGracePeriod: 20
+      terminationGracePeriod: 120
     imagePullSecrets: {}
     livenessProbe:
       failureThreshold: 6

@@ -97,7 +97,6 @@ metadata:
               }
             },
             "statefulset": {
-              "clusterName": "nexusrepo-cluster",
               "container": {
                 "containerPort": 8081,
                 "env": {
@@ -120,7 +119,7 @@ metadata:
                     "memory": "8Gi"
                   }
                 },
-                "terminationGracePeriod": 20
+                "terminationGracePeriod": 120
               },
               "imagePullSecrets": {},
               "livenessProbe": {
@@ -281,9 +280,35 @@ spec:
     ### Additional configuration
     * Once the server instance is created by the operator and running, Nexus Repository can be further configured via the NexusRepo custom resource:
 
-    | Parameter                                   | Description                         | Default                                 |
-    | ------------------------------------------  | ----------------------------------  | ----------------------------------------|
-    
+    | Parameter                                                   | Description                         | Default                                 |
+    | ----------------------------------------------------------- | ----------------------------------  | ----------------------------------------|
+    | `statefulset.name`                                          |  The suffix for the statefulset's service name    | nexusrepo-statefulset
+    | `statefulset.replicaCount`                                  |  The desired number of Nexus Repository pods    | 3 
+    | `statefulset.container.imageName`                           |  The Nexus repository image registry url    | registry.connect.redhat.com/sonatype/nexus-repository-manager:<app version>-ubi-1
+    | `statefulset.container.resources.requests.cpu`              |  The minimum cpu the Nexus repository pod can request    | 4
+    | `statefulset.container.resources.requests.memory`           |  The minimum memory the Nexus repository pod can request    | 8Gi
+    | `statefulset.container.resources.limits.cpu`                |  The maximum cpu the Nexus repository pod may get.    | 4
+    | `statefulset.container.resources.limits.memory`             |  The maximum memory the Nexus repository pod may get.  | 8Gi
+    | `statefulset.container.containerPort`                       |  The Nexus repository container's HTTP port.  | 8081
+    | `statefulset.container.pullPolicy`                          |  The Nexus repository docker image pull policy.  | IfNotPresent
+    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to shutdown gracefully  | 120 seconds
+    | `statefulset.container.env.clustered`                       |  The determines whether Nexus Repository should be started in clustered mode  | True
+    | `statefulset.container.env.install4jAddVmParams`            |  Xmx and Xms settings for JVM  | -Xms2703m -Xmx2703m
+    | `statefulset.container.env.user`                            |  The database user name | nexus (can be overridden via Kubernetes secret. See above)
+    | `statefulset.container.env.password`                        |  The database password  | nexus (can be overridden via Kubernetes secret. See above)
+    | `statefulset.container.env.jdbcUrl`                         |  The database url | jdbc:postgresql://your_database_server:5432/nexus (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)
+    | `statefulset.container.env.nexusInitialPassword`            |  The initial admin password for Nexus Repository UI. This is for first time installs only. Subsequent installs/restarts on the same node ignores this setting | nexusabc
+    | `statefulset.livenessProbe.initialDelaySeconds`             |  The initial delay before the Nexus Repository application is pinged for a response i.e. to determine whether the application is still alive | 240
+    | `statefulset.livenessProbe.path`                            |  The path to ping the application | \
+    | `statefulset.livenessProbe.periodSeconds`                   |  The interval for checking that the application is still alive i.e. responsive, not deadlocked etc | 60
+    | `statefulset.livenessProbe.failureThreshold`                |  The maximum number of times the application ping can fail before the application is considered unresponsive. Kubernetes will attempt to restart the application's pod in this case | 6
+    | `statefulset.readinessProbe.initialDelaySeconds`            |  The initial delay before the Nexus Repository application is checked whether it is ready to receive traffic | 240
+    | `statefulset.readinessProbe.path`                           |  The path where the Nexus Repository application is checked for traffic readiness | \
+    | `statefulset.readinessProbe.periodSeconds`                  |  The interval for checking the Nexus Repository application for traffic readiness | 60
+    | `statefulset.readinessProbe.failureThreshold`               |  The maximum number of times to check the Nexus Repository application for traffic readiness | 6    
+    | `statefulset.imagePullSecrets`                              |  The pull secret for private image registries | {}
+    | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)
+    | `license.secretName`                                        |  The name of a secret object to store your Base64 encoded Nexus Repository license in | nexus-repo-license
 
   displayName: Nexus Repository HA Operator
   icon:
