@@ -32,7 +32,7 @@ spec:
       pv:
         matchNodes: example-node-1 example-node-2 example-node-3
         name: nexusrepo-local-storage-pv
-        size: 200Gi
+        size: 10Gi
       storageClass:
         provisioner: kubernetes.io/no-provisioner
     nfs:
@@ -46,14 +46,14 @@ spec:
         name: nexusrepo-nfs-storage-pv
         server:
           ip: 70.71.156.85
-        size: 200Gi
+        size: 10Gi
       storageClass:
         provisioner: nfs-provisioner
     pv:
       directoryPrefix: /var/nexus-repo-mgr-work-dir/work
     pvc:
       accessMode: ReadWriteOnce
-      size: 100Gi
+      size: 10Gi
     storageClass:
       name: nexusrepo-storage
       reclaimPolicy: Retain
@@ -105,4 +105,4 @@ spec:
       initialDelaySeconds: 240
       path: /
       periodSeconds: 60
-    replicaCount: 2
+    replicaCount: 3

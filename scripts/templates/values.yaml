@@ -3,7 +3,7 @@
 statefulset:
   name: nexusrepo-statefulset
   clusterName: nexusrepo-cluster
-  replicaCount: 2
+  replicaCount: 3
   container:
     imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:{{certAppVersion}}
     resources:
@@ -55,7 +55,7 @@ nexusData:
   pv:
     directoryPrefix: /var/nexus-repo-mgr-work-dir/work
   pvc:
-    size: 100Gi
+    size: 10Gi
     accessMode: ReadWriteOnce
   storageClass:
     name: nexusrepo-storage
@@ -67,7 +67,7 @@ nexusData:
       provisioner: kubernetes.io/no-provisioner
     pv:
       name: nexusrepo-local-storage-pv
-      size: 200Gi
+      size: 10Gi
       matchNodes: "example-node-1 example-node-2 example-node-3"
   nfs:
     enabled: "false" #intentionally a string because it's used to configure operator via env variable
@@ -76,7 +76,7 @@ nexusData:
       provisioner: nfs-provisioner
     pv:
       name: nexusrepo-nfs-storage-pv
-      size: 200Gi
+      size: 10Gi
       exportedServerPaths: "/serverPath1 /serverPath2 /serverPath3"
       mountOptions:
         - hard
