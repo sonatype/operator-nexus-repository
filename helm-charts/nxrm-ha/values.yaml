@@ -2,7 +2,7 @@
 ---
 statefulset:
   name: nexusrepo-statefulset
-  replicaCount: 3
+  replicaCount: 1
   container:
     imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.59.0-ubi-1
     resources:
@@ -17,11 +17,11 @@ statefulset:
     pullPolicy: IfNotPresent
     terminationGracePeriod: 120
     env:
-      clustered: true
+      clustered: false
       install4jAddVmParams: "-Xms2703m -Xmx2703m"
       user: nexus
       password: nexus
-      jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
+      jdbcUrl: null
       nexusInitialPassword: nexusabc
   livenessProbe:
     failureThreshold: 6
@@ -54,7 +54,7 @@ nexusData:
   pv:
     directoryPrefix: /var/nexus-repo-mgr-work-dir/work
   pvc:
-    size: 10Gi
+    size: 2Gi
     accessMode: ReadWriteOnce
   storageClass:
     name: nexusrepo-storage
@@ -66,7 +66,7 @@ nexusData:
       provisioner: kubernetes.io/no-provisioner
     pv:
       name: nexusrepo-local-storage-pv
-      size: 10Gi
+      size: 2Gi
       matchNodes: "example-node-1 example-node-2 example-node-3"
   nfs:
     enabled: "false" #intentionally a string because it's used to configure operator via env variable
@@ -75,7 +75,7 @@ nexusData:
       provisioner: nfs-provisioner
     pv:
       name: nexusrepo-nfs-storage-pv
-      size: 10Gi
+      size: 2Gi
       exportedServerPaths: "/serverPath1 /serverPath2 /serverPath3"
       mountOptions:
         - hard

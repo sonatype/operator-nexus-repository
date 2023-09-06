@@ -76,7 +76,7 @@ spec:
     container:
       containerPort: 8081
       env:
-        clustered: true
+        clustered: false
         install4jAddVmParams: -Xms2703m -Xmx2703m
         jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
         nexusInitialPassword: nexusabc
@@ -104,4 +104,4 @@ spec:
       initialDelaySeconds: 240
       path: /
       periodSeconds: 60
-    replicaCount: 3
+    replicaCount: 1
