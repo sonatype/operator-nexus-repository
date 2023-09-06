@@ -59,6 +59,7 @@ spec:
           env:
             - name: IS_OPEN_SHIFT_DEPLOYMENT
               value: "true"
+            {{- if .Values.statefulset.container.env.clustered }}
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "{{ .Values.statefulset.container.env.clustered }}"
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
@@ -69,19 +70,28 @@ spec:
               value: "{{ .Values.statefulset.container.env.password }}"
             - name: LICENSE_FILE
               value: /var/nexus-repo-license/nexus-repo-license.lic
-            - name: NEXUS_SECURITY_INITIAL_PASSWORD
-              value: "{{ .Values.statefulset.container.env.nexusInitialPassword }}"
             - name: INSTALL4J_ADD_VM_PARAMS
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
-          -Dnexus.licenseFile=${LICENSE_FILE} \
-          -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+          -Dnexus.licenseFile=${LICENSE_FILE} -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+            {{ else }}
+            - name: DATASTORE_ENABLED
+              value: "true"
+            - name: INSTALL4J_ADD_VM_PARAMS
+              value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
+              -Dnexus.datastore.enabled=true -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+            {{- end }}
+            - name: NEXUS_SECURITY_INITIAL_PASSWORD
+              value: "{{ .Values.statefulset.container.env.nexusInitialPassword }}"
           volumeMounts:
             - name: nexusdata
               mountPath: /nexus-data
+  {{- if .Values.statefulset.container.env.clustered }}
             - name: license-volume
               mountPath: /var/nexus-repo-license
               readOnly: true
+  {{- end }}
       volumes:
+  {{- if .Values.statefulset.container.env.clustered }}
         - name: license-volume
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
@@ -94,3 +104,8 @@ spec:
         resources:
           requests:
             storage: {{ .Values.nexusData.pvc.size }}
+  {{ else }}
+       - name: nexusdata
+         emptyDir:
+           sizeLimit: {{ .Values.nexusData.pvc.size }}
+  {{- end }}

@@ -1,3 +1,4 @@
+{{- if .Values.statefulset.container.env.clustered }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -6,3 +7,4 @@ type: Opaque
 data:
   nexus-repo-license.lic: |-
     {{ $.Values.license.fileContentsBase64 }}
+{{- end }}

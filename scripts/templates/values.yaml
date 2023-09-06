@@ -21,7 +21,7 @@ statefulset:
       install4jAddVmParams: "-Xms2703m -Xmx2703m"
       user: nexus
       password: nexus
-      jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
+      jdbcUrl: null
       nexusInitialPassword: nexusabc
   livenessProbe:
     failureThreshold: 6
