@@ -2,7 +2,7 @@
 ---
 statefulset:
   name: nexusrepo-statefulset
-  replicaCount: 3
+  replicaCount: 1
   container:
     imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:{{certAppVersion}}
     resources:
@@ -17,7 +17,7 @@ statefulset:
     pullPolicy: IfNotPresent
     terminationGracePeriod: 120
     env:
-      clustered: true
+      clustered: false
       install4jAddVmParams: "-Xms2703m -Xmx2703m"
       user: nexus
       password: nexus
