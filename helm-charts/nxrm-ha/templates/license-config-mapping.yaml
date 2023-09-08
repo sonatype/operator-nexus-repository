@@ -1,0 +1,10 @@
+{{- if .Values.statefulset.container.env.clustered }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
+type: Opaque
+data:
+  nexus-repo-license.lic: |-
+    {{ $.Values.license.fileContentsBase64 }}
+{{- end }}

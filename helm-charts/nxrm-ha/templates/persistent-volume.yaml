@@ -1,0 +1,53 @@
+{{- if .Values.statefulset.container.env.clustered }}
+{{- range $value := until (.Values.statefulset.replicaCount | int )}}
+{{- if and (eq $.Values.nexusData.local.enabled "true") (not ( eq $.Values.nexusData.nfs.enabled "true" )) }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $.Values.nexusData.local.pv.name }}-{{ $value }}
+spec:
+  capacity:
+    storage: {{ $.Values.nexusData.local.pv.size }}
+  volumeMode: Filesystem
+  accessModes:
+  - {{ $.Values.nexusData.local.accessMode }}
+  persistentVolumeReclaimPolicy: {{ $.Values.nexusData.storageClass.reclaimPolicy }}
+  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Values.nexusData.storageClass.name }}
+  local:
+    path: {{ $.Values.nexusData.pv.directoryPrefix}}{{ $value }}
+  {{- with (splitList " " $.Values.nexusData.local.pv.matchNodes) }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                {{- toYaml . | nindent 16 }}
+  {{- end }}
+{{- end }}
+---
+{{- if and (eq $.Values.nexusData.nfs.enabled "true") (not (eq $.Values.nexusData.local.enabled "true")) }}
+{{- $serverPaths := (splitList " " $.Values.nexusData.nfs.pv.exportedServerPaths) }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $.Values.nexusData.nfs.pv.name }}-{{ $value }}
+spec:
+  capacity:
+    storage: {{ $.Values.nexusData.nfs.pv.size }}
+  volumeMode: Filesystem
+  accessModes:
+    - {{ $.Values.nexusData.nfs.accessMode }}
+  persistentVolumeReclaimPolicy: {{ $.Values.nexusData.storageClass.reclaimPolicy }}
+  storageClassName: {{ $.Chart.Name }}-{{ $.Chart.Version}}-{{ $.Values.nexusData.storageClass.name }}
+  {{- with $.Values.nexusData.nfs.pv.mountOptions }}
+  mountOptions:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  nfs:
+    path: {{ index $serverPaths $value }}
+    server: {{ $.Values.nexusData.nfs.pv.server.ip }}
+{{- end }}
+{{- end }}
+{{- end }}

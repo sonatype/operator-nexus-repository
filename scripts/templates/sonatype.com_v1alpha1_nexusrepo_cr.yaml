@@ -1,0 +1,107 @@
+# {{templateWarning}}
+---
+apiVersion: sonatype.com/v1alpha1
+kind: NexusRepo
+metadata:
+  name: nexusrepo-sample
+spec:
+  # Default values copied from <project_dir>/helm-charts/nxrm-ha/values.yaml
+  ingress:
+    additionalRules: null
+    annotations: null
+    defaultRule: "false"
+    dockerIngress:
+      annotations: null
+      enabled: "false"
+      host: example.com
+      name: nexus-docker-ingress
+    dockerSubdomain: false
+    enabled: "false"
+    host: example.com
+    name: nexus-ingress
+    tls:
+      enabled: "false"
+      secretName: tlsSecretName
+  license:
+    fileContentsBase64: your_license_file_contents_in_base_64
+    secretName: nexus-repo-license
+  nexusData:
+    local:
+      accessMode: ReadWriteOnce
+      enabled: "true"
+      pv:
+        matchNodes: example-node-1 example-node-2 example-node-3
+        name: nexusrepo-local-storage-pv
+        size: 10Gi
+      storageClass:
+        provisioner: kubernetes.io/no-provisioner
+    nfs:
+      accessMode: ReadWriteMany
+      enabled: "false"
+      pv:
+        exportedServerPaths: /serverPath1 /serverPath2 /serverPath3
+        mountOptions:
+          - hard
+          - nfsvers=4.1
+        name: nexusrepo-nfs-storage-pv
+        server:
+          ip: 70.71.156.85
+        size: 10Gi
+      storageClass:
+        provisioner: nfs-provisioner
+    pv:
+      directoryPrefix: /var/nexus-repo-mgr-work-dir/work
+    pvc:
+      accessMode: ReadWriteOnce
+      size: 10Gi
+    storageClass:
+      name: nexusrepo-storage
+      reclaimPolicy: Retain
+  service:
+    docker:
+      enabled: "false"
+      name: nexus-repo-docker-service
+      port: 9090
+      protocol: TCP
+      targetPort: 8081
+      type: NodePort
+    nexus:
+      enabled: "false"
+      name: nexus-repo-service
+      port: 80
+      protocol: TCP
+      targetPort: 8081
+      type: NodePort
+  statefulset:
+    container:
+      containerPort: 8081
+      env:
+        clustered: false
+        install4jAddVmParams: -Xms2703m -Xmx2703m
+        jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
+        nexusInitialPassword: nexusabc
+        password: nexus
+        user: nexus
+      imageName: {{certAppSHA}}
+      pullPolicy: IfNotPresent
+      resources:
+        limits:
+          cpu: 4
+          memory: 8Gi
+        requests:
+          cpu: 4
+          memory: 8Gi
+      terminationGracePeriod: 120
+    imagePullSecrets: {}
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 240
+      path: /
+      periodSeconds: 60
+    name: nexusrepo-statefulset
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 240
+      path: /
+      periodSeconds: 60
+    replicaCount: 1

@@ -1,0 +1,69 @@
+{{- if eq .Values.ingress.enabled "true" -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}-{{ .Values.ingress.name }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  rules:
+    {{- if eq .Values.ingress.defaultRule "true" }}
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-{{ .Values.service.nexus.name }}
+                port:
+                  number: {{ .Values.service.nexus.port }}
+    {{- end }}
+    {{- with .Values.ingress.additionalRules }}
+      {{ toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.ingress.dockerSubdomain }}
+    - host: "*.{{ .Values.ingress.host }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-{{ .Values.service.nexus.name }}
+                port:
+                  number: {{ .Values.service.nexus.port }}
+    {{- end }}
+  {{- if eq .Values.ingress.tls.enabled "true" }}
+  tls:
+    - hosts:
+      {{- if .Values.ingress.tls.secretName }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+      {{- end }}
+  {{- end }}
+{{- end }}
+---
+{{- if eq .Values.ingress.dockerIngress.enabled "true" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}-{{ .Values.ingress.dockerIngress.name }}
+  {{- with .Values.ingress.dockerIngress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  rules:
+    - host: {{ .Values.ingress.dockerIngress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-{{ .Values.service.docker.name }}
+                port:
+                  number: {{ .Values.service.docker.port }}
+{{- end }}
