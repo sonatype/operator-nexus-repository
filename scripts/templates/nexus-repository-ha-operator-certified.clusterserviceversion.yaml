@@ -15,19 +15,19 @@ metadata:
             "ingress": {
               "additionalRules": null,
               "annotations": null,
-              "defaultRule": "false",
+              "defaultRule": false,
               "dockerIngress": {
                 "annotations": null,
-                "enabled": "false",
+                "enabled": false,
                 "host": "example.com",
                 "name": "nexus-docker-ingress"
               },
               "dockerSubdomain": false,
-              "enabled": "false",
+              "enabled": false,
               "host": "example.com",
               "name": "nexus-ingress",
               "tls": {
-                "enabled": "false",
+                "enabled": false,
                 "secretName": "tlsSecretName"
               }
             },
@@ -38,7 +38,7 @@ metadata:
             "nexusData": {
               "local": {
                 "accessMode": "ReadWriteOnce",
-                "enabled": "true",
+                "enabled": true,
                 "pv": {
                   "matchNodes": "example-node-1 example-node-2 example-node-3",
                   "name": "nexusrepo-local-storage-pv",
@@ -50,7 +50,7 @@ metadata:
               },
               "nfs": {
                 "accessMode": "ReadWriteMany",
-                "enabled": "false",
+                "enabled": false,
                 "pv": {
                   "exportedServerPaths": "/path1 /path2 /path3",
                   "mountOptions": [
@@ -81,7 +81,7 @@ metadata:
             },
             "service": {
               "docker": {
-                "enabled": "false",
+                "enabled": false,
                 "name": "nexus-repo-docker-service",
                 "port": 9090,
                 "protocol": "TCP",
@@ -89,7 +89,7 @@ metadata:
                 "type": "NodePort"
               },
               "nexus": {
-                "enabled": "false",
+                "enabled": false,
                 "name": "nexus-repo-service",
                 "port": 80,
                 "protocol": "TCP",
@@ -194,8 +194,6 @@ spec:
 
     ## Limitations
 
-    This operator will be released on a quarterly basis.
-
     ## Controlling Automatic vs Manual Update
 
     If you use the default configuration for the Nexus Repository Operator installation,
@@ -206,8 +204,56 @@ spec:
     into **its own namespace** with **manual approval** for updates.
 
     ## Usage
-    By default, the Nexus Repository starts up in OSS mode until a license is installed.
-    The Nexus Repository can be further configured via the NexusRepo custom resource definition:
+    By default, the example Custom Resource starts up a single instance of Nexus Repository in OSS mode. The database used in this case is H2.
+
+    ### HA mode
+    To start Nexus Repository in HA mode, you must edit the Custom Resource YAML as follows:
+
+    * Update the `license.fileContentsBase64` parameter with a base 64 representation of your Nexus Repository Pro license.
+    * Set the `statefulset.container.env.jdbcUrl` parameter to your database url.
+    * Set the `statefulset.container.env.user` parameter to your database user name.
+    * Set the `statefulset.container.env.password` parameter to your database password.
+    * Set the `statefulset.container.env.clustered` parameter to true
+    * You must setup storage for your Nexus Repository pods as described in the 'Storage' section below.
+
+    ### Storage
+    #### Local storage
+    By default, this chart uses local volume storage for HA mode i.e. when the `statefulset.container.env.clustered` parameter is set to true.
+    You must also set all the parameters specified in the HA mode section above accordingly. In addition, before installing an
+    instance of the operator's custom resource in HA mode, you'll need to create directories on each node in your
+    Kubernetes/Open shift cluster for storing nexus repository runtime (logs, config dump etc) data.
+
+      The following constraints should be adhered to regarding the names and number of directories to create on each node:
+      * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
+       in the custom resource. It is best for this to be a sub directory of ```/var```
+      * The directory names must have an integer as the suffix beginning with 0 then 1 and so on.
+      * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the
+      custom resource.
+      * You must chown all the directories you create to ```200:200```
+      * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/var/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on each node:
+      ```
+      mkdir -p /var/nexus-repo-work/work0
+      mkdir -p /var/nexus-repo-work/work1
+      mkdir -p /var/nexus-repo-work/work2
+      ```
+      and chown: ```chown -R 200:200 /var/nexus-repo-work/ ```
+
+    ##### Network storage
+    This chart also support NFS storage. If you wish to use NFS storage do as follows:
+      * Set ```nexusData.nfs.enabled``` to true in your custom resource.
+      * Set ```nexusData.local.enabled``` to false in your custom resource.
+      * Set all the parameters specified in the HA mode section above accordingly.
+      * Set additional configuration for your NFS via the ```nexusData.nfs``` section in your custom resource.
+      * Create directories on your NFS server based on the following constraints:
+        * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the custom resource.
+        * You must set appropriate write permissions for all subdirectories
+        * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on your NFS server:
+          ```
+          mkdir -p /nfs_root/nexus-repo-work/work0
+          mkdir -p /nfs_root/nexus-repo-work/work1
+          mkdir -p /nfs_root/nexus-repo-work/work2
+          ```
+        * Ensure the appropriate write permissions are set for the above subdirectories on your NFS server
 
     ### Additional configuration
     * Once the server instance is created by the operator and running, Nexus Repository can be further configured via the NexusRepo custom resource:
@@ -224,7 +270,7 @@ spec:
     | `statefulset.container.containerPort`                       |  The Nexus repository container's HTTP port.  | 8081|
     | `statefulset.container.pullPolicy`                          |  The Nexus repository docker image pull policy.  | IfNotPresent|
     | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to shutdown gracefully  | 120 seconds|
-    | `statefulset.container.env.clustered`                       |  The determines whether Nexus Repository should be started in clustered mode  | True|
+    | `statefulset.container.env.clustered`                       |  The determines whether Nexus Repository should be started in clustered mode  | False|
     | `statefulset.container.env.install4jAddVmParams`            |  Xmx and Xms settings for JVM  | -Xms2703m -Xmx2703m|
     | `statefulset.container.env.user`                            |  The database user name | nexus (can be overridden via Kubernetes secret. See above)|
     | `statefulset.container.env.password`                        |  The database password  | nexus (can be overridden via Kubernetes secret. See above)|
@@ -239,17 +285,23 @@ spec:
     | `statefulset.readinessProbe.periodSeconds`                  |  The interval for checking the Nexus Repository application for traffic readiness | 60|
     | `statefulset.readinessProbe.failureThreshold`               |  The maximum number of times to check the Nexus Repository application for traffic readiness | 6|
     | `statefulset.imagePullSecrets`                              |  The pull secret for private image registries | {}|
-    | `ingress.name`                                              |  The name of Nexus Repository Ingress object | nexus-ingress|
-    | `ingress.enabled`                                           |  Whether or not to create the Nexus Repository Ingress | "false"|
+    | `ingress.name`                                              |  The name of an Ingress object which listens for requests to Nexus Repository on port 80 | nexus-ingress|
+    | `ingress.enabled`                                           |  Whether or not to create the Nexus Repository Ingress | false|
     | `ingress.host`                                              |  Ingress host | "example.com"|
-    | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | "false"|
+    | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | false|
     | `ingress.additionalRules`                                   |  Additional rules to add to the ingress | null|
-    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the ingress | "false"|
+    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the ingress | false|
     | `ingress.tls.secretName`                                    | The name of a Secret object to store TLS secret in | tlsSecretName|
     | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
     | `ingress.annotations`                                       |  Annotations for the ingress object | null |
     | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
     | `license.secretName`                                        |  The name of a secret object to store your Base64 encoded Nexus Repository license in | nexus-repo-license|
+    | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
+    | `ingress.dockerIngress.enabled`                             |  Whether or not to create an ingress for a docker repository | false|
+    | `ingress.dockerIngress.host`                                |  The docker ingress's host | "example.com"|
+    | `ingress.dockerIngress.annotations`                         |  Annotations for the docker ingress object | null |
+    | `ingress.dockerIngress.annotations`                         |  Annotations for the docker ingress object | null |
+    
 
   displayName: Nexus Repository HA Operator
   icon:

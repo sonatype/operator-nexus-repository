@@ -36,19 +36,19 @@ statefulset:
   imagePullSecrets: {}
 ingress:
   name: nexus-ingress
-  enabled: "false" #intentionally a string because it's used to configure operator via env variable
+  enabled: false
   host: "example.com"
-  defaultRule: "false"
+  defaultRule: false
   additionalRules: null
   tls:
-    enabled: "false" #intentionally a string because it's used to configure operator via env variable
+    enabled: false
     secretName: "tlsSecretName"
   dockerSubdomain: false
   annotations: null
   dockerIngress:  #Ingress for Docker Connector - comment out if you don't use docker repositories
     name: nexus-docker-ingress
     host: "example.com"
-    enabled: "false" #intentionally a string because it's used to configure operator via env variable
+    enabled: false
     annotations: null
 nexusData:
   pv:
@@ -60,7 +60,7 @@ nexusData:
     name: nexusrepo-storage
     reclaimPolicy: Retain
   local:
-    enabled: "true" #intentionally a string because it's used to configure operator via env variable
+    enabled: true
     accessMode: ReadWriteOnce
     storageClass:
       provisioner: kubernetes.io/no-provisioner
@@ -69,7 +69,7 @@ nexusData:
       size: 2Gi
       matchNodes: "example-node-1 example-node-2 example-node-3"
   nfs:
-    enabled: "false" #intentionally a string because it's used to configure operator via env variable
+    enabled: false
     accessMode: ReadWriteMany
     storageClass:
       provisioner: nfs-provisioner
@@ -89,14 +89,14 @@ license:
 service:  #Nexus Repo NodePort Service
   nexus:
     name: nexus-repo-service
-    enabled: "false" #intentionally a string because it's used to configure operator via env variable
+    enabled: false
     type: NodePort
     protocol: TCP
     port: 80
     targetPort: 8081
   docker:  #Nodeport Service for Docker Service
     name: nexus-repo-docker-service
-    enabled: "false" #intentionally a string because it's used to configure operator via env variable
+    enabled: false
     type: NodePort
     protocol: TCP
     port: 9090

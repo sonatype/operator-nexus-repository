@@ -1,4 +1,4 @@
-{{- if eq .Values.ingress.enabled "true" -}}
+{{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +9,7 @@ metadata:
   {{- end }}
 spec:
   rules:
-    {{- if eq .Values.ingress.defaultRule "true" }}
+    {{- if .Values.ingress.defaultRule }}
     - host: {{ .Values.ingress.host }}
       http:
         paths:
@@ -36,7 +36,7 @@ spec:
                 port:
                   number: {{ .Values.service.nexus.port }}
     {{- end }}
-  {{- if eq .Values.ingress.tls.enabled "true" }}
+  {{- if .Values.ingress.tls.enabled }}
   tls:
     - hosts:
       {{- if .Values.ingress.tls.secretName }}
@@ -45,7 +45,7 @@ spec:
   {{- end }}
 {{- end }}
 ---
-{{- if eq .Values.ingress.dockerIngress.enabled "true" }}
+{{- if .Values.ingress.dockerIngress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

@@ -1,4 +1,4 @@
-{{- if eq .Values.service.nexus.enabled "true" }}
+{{- if .Values.service.nexus.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -15,7 +15,7 @@ spec:
       targetPort: {{ .Values.service.nexus.targetPort }}
 {{- end }}
 ---
-{{- if eq .Values.service.docker.enabled "true" }}
+{{- if .Values.service.docker.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
