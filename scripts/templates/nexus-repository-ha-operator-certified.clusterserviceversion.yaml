@@ -293,7 +293,7 @@ spec:
     | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the ingress | false|
     | `ingress.tls.secretName`                                    | The name of a Secret object to store TLS secret in | tlsSecretName|
     | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
-    | `ingress.annotations`                                       |  Annotations for the ingress object | null |
+    | `ingress.annotations`                                       |  Annotations for the Ingress object | null |
     | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
     | `license.secretName`                                        |  The name of a secret object in which to store your Base64-encoded Nexus Repository license | nexus-repo-license|
     | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
