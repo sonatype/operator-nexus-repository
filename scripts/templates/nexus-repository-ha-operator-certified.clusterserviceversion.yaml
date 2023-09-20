@@ -298,7 +298,7 @@ spec:
     | `license.secretName`                                        |  The name of a secret object in which to store your Base64-encoded Nexus Repository license | nexus-repo-license|
     | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
     | `ingress.dockerIngress.enabled`                             |  Whether or not to create an Ingress for a docker repository | false|
-    | `ingress.dockerIngress.host`                                |  The docker ingress's host | "example.com"|
+    | `ingress.dockerIngress.host`                                |  The docker Ingress's host | "example.com"|
     | `ingress.dockerIngress.annotations`                         |  Annotations for the docker ingress object | null |
     | `nexusData.pv.directoryPrefix`                              |  The directory prefix specified in a persistent volume object when using local storage for storing Nexus logs | /var/nexus-repo-mgr-work-dir/work |
     | `nexusData.pvc.size`                                        |  The size for the persistent volume claim object when using local/nfs storage for storing Nexus logs | 2Gi |
