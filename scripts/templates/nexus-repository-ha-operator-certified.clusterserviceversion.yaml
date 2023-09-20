@@ -229,7 +229,7 @@ spec:
       * The directory names must have an integer as the suffix and must follow numeric order beginning with 0 (i.e., the first ending with 0, the next ending with 1, etc.).
       * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the
       custom resource.
-      * You must chown all the directories you create to ```200:200```
+      * You must chown all the directories you create to ```200:200```.
       * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/var/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on each node:
       ```
       mkdir -p /var/nexus-repo-work/work0
