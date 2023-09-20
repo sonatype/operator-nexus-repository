@@ -204,7 +204,7 @@ spec:
     into **its own namespace** with **manual approval** for updates.
 
     ## Usage
-    By default, the example Custom Resource starts up a single instance of Nexus Repository in OSS mode. The database used in this case is H2.
+    By default, the example Custom Resource starts up a single instance of Nexus Repository in non-Pro mode using an H2 database.
 
     ### HA mode
     To start Nexus Repository in HA mode, you must edit the Custom Resource YAML as follows:
