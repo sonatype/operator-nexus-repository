@@ -223,7 +223,7 @@ spec:
     instance of the operator's custom resource in HA mode, you'll need to create directories on each node in your
     Kubernetes/OpenShift cluster for storing Nexus Repository runtime data (logs, config dump, etc.).
 
-      The following constraints should be adhered to regarding the names and number of directories to create on each node:
+      You must adhere to the following constraints regarding the names and number of directories to create on each node:
       * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
        in the custom resource. It is best for this to be a sub directory of ```/var```
       * The directory names must have an integer as the suffix beginning with 0 then 1 and so on.
