@@ -226,7 +226,7 @@ spec:
       You must adhere to the following constraints regarding the names and number of directories to create on each node:
       * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
        in the custom resource. It is best for this to be a sub directory of ```/var```.
-      * The directory names must have an integer as the suffix beginning with 0 then 1 and so on.
+      * The directory names must have an integer as the suffix and must follow numeric order beginning with 0 (i.e., the first ending with 0, the next ending with 1, etc.).
       * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the
       custom resource.
       * You must chown all the directories you create to ```200:200```
