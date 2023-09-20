@@ -221,7 +221,7 @@ spec:
     By default, this chart uses local volume storage for HA mode (i.e., when the `statefulset.container.env.clustered` parameter is set to true).
     You must also set all the parameters specified in the HA mode section above accordingly. In addition, before installing an
     instance of the operator's custom resource in HA mode, you'll need to create directories on each node in your
-    Kubernetes/Open shift cluster for storing nexus repository runtime (logs, config dump etc) data.
+    Kubernetes/OpenShift cluster for storing Nexus Repository runtime data (logs, config dump, etc.).
 
       The following constraints should be adhered to regarding the names and number of directories to create on each node:
       * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
