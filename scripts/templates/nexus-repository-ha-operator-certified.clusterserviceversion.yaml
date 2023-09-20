@@ -295,7 +295,7 @@ spec:
     | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
     | `ingress.annotations`                                       |  Annotations for the ingress object | null |
     | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
-    | `license.secretName`                                        |  The name of a secret object to store your Base64 encoded Nexus Repository license in | nexus-repo-license|
+    | `license.secretName`                                        |  The name of a secret object in which to store your Base64-encoded Nexus Repository license | nexus-repo-license|
     | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
     | `ingress.dockerIngress.enabled`                             |  Whether or not to create an ingress for a docker repository | false|
     | `ingress.dockerIngress.host`                                |  The docker ingress's host | "example.com"|
