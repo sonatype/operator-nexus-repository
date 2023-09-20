@@ -213,7 +213,7 @@ spec:
     * Set the `statefulset.container.env.jdbcUrl` parameter to your database url.
     * Set the `statefulset.container.env.user` parameter to your database user name.
     * Set the `statefulset.container.env.password` parameter to your database password.
-    * Set the `statefulset.container.env.clustered` parameter to true
+    * Set the `statefulset.container.env.clustered` parameter to true.
     * You must setup storage for your Nexus Repository pods as described in the 'Storage' section below.
 
     ### Storage
