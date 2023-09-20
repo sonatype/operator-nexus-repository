@@ -239,24 +239,24 @@ spec:
       and chown: ```chown -R 200:200 /var/nexus-repo-work/ ```
 
     ##### Network storage
-    This chart also support NFS storage. If you wish to use NFS storage do as follows:
+    This chart also support NFS storage. If you wish to use NFS storage, do as follows:
       * Set ```nexusData.nfs.enabled``` to true in your custom resource.
       * Set ```nexusData.local.enabled``` to false in your custom resource.
       * Set all the parameters specified in the HA mode section above accordingly.
       * Set additional configuration for your NFS via the ```nexusData.nfs``` section in your custom resource.
       * Create directories on your NFS server based on the following constraints:
         * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the custom resource.
-        * You must set appropriate write permissions for all subdirectories
+        * You must set appropriate write permissions for all subdirectories.
         * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on your NFS server:
           ```
           mkdir -p /nfs_root/nexus-repo-work/work0
           mkdir -p /nfs_root/nexus-repo-work/work1
           mkdir -p /nfs_root/nexus-repo-work/work2
           ```
-        * Ensure the appropriate write permissions are set for the above subdirectories on your NFS server
+        * Ensure the appropriate write permissions are set for the above subdirectories on your NFS server.
 
     ### Additional configuration
-    * Once the server instance is created by the operator and running, Nexus Repository can be further configured via the NexusRepo custom resource:
+    * Once the operator has created the server instance and it is running, you can further configure Nexus Repository via the NexusRepo custom resource:
 
     | Parameter                                                   | Description                         | Default                                 |
     | ----------------------------------------------------------- | ----------------------------------  | ----------------------------------------|
@@ -267,10 +267,10 @@ spec:
     | `statefulset.container.resources.requests.memory`           |  The minimum memory the Nexus repository pod can request    | 8Gi|
     | `statefulset.container.resources.limits.cpu`                |  The maximum cpu the Nexus repository pod may get.    | 4|
     | `statefulset.container.resources.limits.memory`             |  The maximum memory the Nexus repository pod may get.  | 8Gi|
-    | `statefulset.container.containerPort`                       |  The Nexus repository container's HTTP port.  | 8081|
-    | `statefulset.container.pullPolicy`                          |  The Nexus repository docker image pull policy.  | IfNotPresent|
-    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to shutdown gracefully  | 120 seconds|
-    | `statefulset.container.env.clustered`                       |  The determines whether Nexus Repository should be started in clustered mode  | False|
+    | `statefulset.container.containerPort`                       |  The Nexus Repository container's HTTP port  | 8081|
+    | `statefulset.container.pullPolicy`                          |  The Nexus Repository docker image pull policy  | IfNotPresent|
+    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to gracefully shut down  | 120 seconds|
+    | `statefulset.container.env.clustered`                       |  Controls whether Nexus Repository should start in clustered mode  | False|
     | `statefulset.container.env.install4jAddVmParams`            |  Xmx and Xms settings for JVM  | -Xms2703m -Xmx2703m|
     | `statefulset.container.env.user`                            |  The database user name | nexus (can be overridden via Kubernetes secret. See above)|
     | `statefulset.container.env.password`                        |  The database password  | nexus (can be overridden via Kubernetes secret. See above)|
@@ -290,8 +290,8 @@ spec:
     | `ingress.host`                                              |  Ingress host | "example.com"|
     | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | false|
     | `ingress.additionalRules`                                   |  Additional rules to add to the ingress | null|
-    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the ingress | false|
-    | `ingress.tls.secretName`                                    | The name of a Secret object to store TLS secret in | tlsSecretName|
+    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the Ingress | false|
+    | `ingress.tls.secretName`                                    | The name of a Secret object in which to store the TLS secret | tlsSecretName|
     | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
     | `ingress.annotations`                                       |  Annotations for the Ingress object | null |
     | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
