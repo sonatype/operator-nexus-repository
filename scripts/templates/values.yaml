@@ -60,7 +60,7 @@ nexusData:
     name: nexusrepo-storage
     reclaimPolicy: Retain
   local:
-    enabled: true
+    enabled: false
     accessMode: ReadWriteOnce
     storageClass:
       provisioner: kubernetes.io/no-provisioner

@@ -85,16 +85,18 @@ spec:
           volumeMounts:
             - name: nexusdata
               mountPath: /nexus-data
-  {{- if .Values.statefulset.container.env.clustered }}
+  {{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
             - name: license-volume
               mountPath: /var/nexus-repo-license
               readOnly: true
   {{- end }}
       volumes:
-  {{- if .Values.statefulset.container.env.clustered }}
+  {{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
         - name: license-volume
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
+  {{- end }}
+  {{-if or .Values.nexusData.local.enabled .Values.nexusData.nfs.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: nexusdata

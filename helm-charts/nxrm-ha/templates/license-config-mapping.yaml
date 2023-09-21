@@ -1,4 +1,4 @@
-{{- if .Values.statefulset.container.env.clustered }}
+{{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
 apiVersion: v1
 kind: Secret
 metadata:
