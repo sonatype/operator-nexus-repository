@@ -15,19 +15,19 @@ metadata:
             "ingress": {
               "additionalRules": null,
               "annotations": null,
-              "defaultRule": "false",
+              "defaultRule": false,
               "dockerIngress": {
                 "annotations": null,
-                "enabled": "false",
+                "enabled": false,
                 "host": "example.com",
                 "name": "nexus-docker-ingress"
               },
               "dockerSubdomain": false,
-              "enabled": "false",
+              "enabled": false,
               "host": "example.com",
               "name": "nexus-ingress",
               "tls": {
-                "enabled": "false",
+                "enabled": false,
                 "secretName": "tlsSecretName"
               }
             },
@@ -38,11 +38,11 @@ metadata:
             "nexusData": {
               "local": {
                 "accessMode": "ReadWriteOnce",
-                "enabled": "true",
+                "enabled": true,
                 "pv": {
                   "matchNodes": "example-node-1 example-node-2 example-node-3",
                   "name": "nexusrepo-local-storage-pv",
-                  "size": "10Gi"
+                  "size": "2Gi"
                 },
                 "storageClass": {
                   "provisioner": "kubernetes.io/no-provisioner"
@@ -50,7 +50,7 @@ metadata:
               },
               "nfs": {
                 "accessMode": "ReadWriteMany",
-                "enabled": "false",
+                "enabled": false,
                 "pv": {
                   "exportedServerPaths": "/path1 /path2 /path3",
                   "mountOptions": [
@@ -61,7 +61,7 @@ metadata:
                   "server": {
                     "ip": "70.71.156.85"
                   },
-                  "size": "10Gi"
+                  "size": "2Gi"
                 },
                 "storageClass": {
                   "provisioner": "nfs-provisioner"
@@ -72,7 +72,7 @@ metadata:
               },
               "pvc": {
                 "accessMode": "ReadWriteOnce",
-                "size": "10Gi"
+                "size": "2Gi"
               },
               "storageClass": {
                 "name": "nexusrepo-storage",
@@ -81,15 +81,15 @@ metadata:
             },
             "service": {
               "docker": {
-                "enabled": "false",
+                "enabled": false,
                 "name": "nexus-repo-docker-service",
                 "port": 9090,
                 "protocol": "TCP",
-                "targetPort": 8081,
+                "targetPort": 9090,
                 "type": "NodePort"
               },
               "nexus": {
-                "enabled": "false",
+                "enabled": false,
                 "name": "nexus-repo-service",
                 "port": 80,
                 "protocol": "TCP",
@@ -194,8 +194,6 @@ spec:
 
     ## Limitations
 
-    This operator will be released on a quarterly basis.
-
     ## Controlling Automatic vs Manual Update
 
     If you use the default configuration for the Nexus Repository Operator installation,
@@ -206,11 +204,59 @@ spec:
     into **its own namespace** with **manual approval** for updates.
 
     ## Usage
-    By default, the Nexus Repository starts up in OSS mode until a license is installed.
-    The Nexus Repository can be further configured via the NexusRepo custom resource definition:
+    By default, the example Custom Resource starts up a single instance of Nexus Repository in non-Pro mode using an H2 database.
+
+    ### HA mode
+    To start Nexus Repository in HA mode, you must edit the Custom Resource YAML as follows:
+
+    * Update the `license.fileContentsBase64` parameter with a base 64 representation of your Nexus Repository Pro license.
+    * Set the `statefulset.container.env.jdbcUrl` parameter to your database url.
+    * Set the `statefulset.container.env.user` parameter to your database user name.
+    * Set the `statefulset.container.env.password` parameter to your database password.
+    * Set the `statefulset.container.env.clustered` parameter to true.
+    * You must setup storage for your Nexus Repository pods as described in the 'Storage' section below.
+
+    ### Storage
+    #### Local storage
+    By default, this chart uses local volume storage for HA mode (i.e., when the `statefulset.container.env.clustered` parameter is set to true).
+    You must also set all the parameters specified in the HA mode section above accordingly. In addition, before installing an
+    instance of the operator's custom resource in HA mode, you'll need to create directories on each node in your
+    Kubernetes/OpenShift cluster for storing Nexus Repository runtime data (logs, config dump, etc.).
+
+      You must adhere to the following constraints regarding the names and number of directories to create on each node:
+      * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
+       in the custom resource. It is best for this to be a sub directory of ```/var```.
+      * The directory names must have an integer as the suffix and must follow numeric order beginning with 0 (i.e., the first ending with 0, the next ending with 1, etc.).
+      * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the
+      custom resource.
+      * You must chown all the directories you create to ```200:200```.
+      * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/var/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on each node:
+      ```
+      mkdir -p /var/nexus-repo-work/work0
+      mkdir -p /var/nexus-repo-work/work1
+      mkdir -p /var/nexus-repo-work/work2
+      ```
+      and chown: ```chown -R 200:200 /var/nexus-repo-work/ ```
+
+    ##### Network storage
+    This chart also support NFS storage. If you wish to use NFS storage, do as follows:
+      * Set ```nexusData.nfs.enabled``` to true in your custom resource.
+      * Set ```nexusData.local.enabled``` to false in your custom resource.
+      * Set all the parameters specified in the HA mode section above accordingly.
+      * Set additional configuration for your NFS via the ```nexusData.nfs``` section in your custom resource.
+      * Create directories on your NFS server based on the following constraints:
+        * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the custom resource.
+        * You must set appropriate write permissions for all subdirectories.
+        * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on your NFS server:
+          ```
+          mkdir -p /nfs_root/nexus-repo-work/work0
+          mkdir -p /nfs_root/nexus-repo-work/work1
+          mkdir -p /nfs_root/nexus-repo-work/work2
+          ```
+        * Ensure the appropriate write permissions are set for the above subdirectories on your NFS server.
 
     ### Additional configuration
-    * Once the server instance is created by the operator and running, Nexus Repository can be further configured via the NexusRepo custom resource:
+    * Once the operator has created the server instance and it is running, you can further configure Nexus Repository via the NexusRepo custom resource:
 
     | Parameter                                                   | Description                         | Default                                 |
     | ----------------------------------------------------------- | ----------------------------------  | ----------------------------------------|
@@ -221,10 +267,10 @@ spec:
     | `statefulset.container.resources.requests.memory`           |  The minimum memory the Nexus repository pod can request    | 8Gi|
     | `statefulset.container.resources.limits.cpu`                |  The maximum cpu the Nexus repository pod may get.    | 4|
     | `statefulset.container.resources.limits.memory`             |  The maximum memory the Nexus repository pod may get.  | 8Gi|
-    | `statefulset.container.containerPort`                       |  The Nexus repository container's HTTP port.  | 8081|
-    | `statefulset.container.pullPolicy`                          |  The Nexus repository docker image pull policy.  | IfNotPresent|
-    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to shutdown gracefully  | 120 seconds|
-    | `statefulset.container.env.clustered`                       |  The determines whether Nexus Repository should be started in clustered mode  | True|
+    | `statefulset.container.containerPort`                       |  The Nexus Repository container's HTTP port  | 8081|
+    | `statefulset.container.pullPolicy`                          |  The Nexus Repository docker image pull policy  | IfNotPresent|
+    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to gracefully shut down  | 120 seconds|
+    | `statefulset.container.env.clustered`                       |  Controls whether Nexus Repository should start in clustered mode  | False|
     | `statefulset.container.env.install4jAddVmParams`            |  Xmx and Xms settings for JVM  | -Xms2703m -Xmx2703m|
     | `statefulset.container.env.user`                            |  The database user name | nexus (can be overridden via Kubernetes secret. See above)|
     | `statefulset.container.env.password`                        |  The database password  | nexus (can be overridden via Kubernetes secret. See above)|
@@ -239,17 +285,55 @@ spec:
     | `statefulset.readinessProbe.periodSeconds`                  |  The interval for checking the Nexus Repository application for traffic readiness | 60|
     | `statefulset.readinessProbe.failureThreshold`               |  The maximum number of times to check the Nexus Repository application for traffic readiness | 6|
     | `statefulset.imagePullSecrets`                              |  The pull secret for private image registries | {}|
-    | `ingress.name`                                              |  The name of Nexus Repository Ingress object | nexus-ingress|
-    | `ingress.enabled`                                           |  Whether or not to create the Nexus Repository Ingress | "false"|
+    | `ingress.name`                                              |  The name of an Ingress object which listens for requests to Nexus Repository on port 80 | nexus-ingress|
+    | `ingress.enabled`                                           |  Whether or not to create the Ingress | false|
     | `ingress.host`                                              |  Ingress host | "example.com"|
-    | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | "false"|
+    | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | false|
     | `ingress.additionalRules`                                   |  Additional rules to add to the ingress | null|
-    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the ingress | "false"|
-    | `ingress.tls.secretName`                                    | The name of a Secret object to store TLS secret in | tlsSecretName|
+    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the Ingress | false|
+    | `ingress.tls.secretName`                                    | The name of a Secret object in which to store the TLS secret | tlsSecretName|
     | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
-    | `ingress.annotations`                                       |  Annotations for the ingress object | null |
-    | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | nexus-repo-license (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
-    | `license.secretName`                                        |  The name of a secret object to store your Base64 encoded Nexus Repository license in | nexus-repo-license|
+    | `ingress.annotations`                                       |  Annotations for the Ingress object | null |
+    | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | your_license_file_contents_in_base_64 |
+    | `license.secretName`                                        |  The name of a secret object in which to store your Base64-encoded Nexus Repository license | nexus-repo-license|
+    | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
+    | `ingress.dockerIngress.enabled`                             |  Whether or not to create an Ingress for a docker repository | false|
+    | `ingress.dockerIngress.host`                                |  The docker Ingress's host | "example.com"|
+    | `ingress.dockerIngress.annotations`                         |  Annotations for the docker Ingress object | null |
+    | `nexusData.pv.directoryPrefix`                              |  The directory prefix specified in a persistent volume object when using local storage for storing Nexus logs | /var/nexus-repo-mgr-work-dir/work |
+    | `nexusData.pvc.size`                                        |  The size for the persistent volume claim object when using local/nfs storage for storing Nexus logs | 2Gi |
+    | `nexusData.pvc.accessMode`                                  |  The persistent volume claim access mode | ReadWriteOnce |
+    | `nexusData.storageClass.name`                               |  The name for the storage class. | nexusrepo-storage |
+    | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for the storage class and persistent volume | Retain |
+    | `nexusData.local.enabled`                                   |  Whether to enable local storage. This is only used when `statefulset.container.env.clustered` is true | true |
+    | `nexusData.local.accessMode`                                | The access mode to use for the persistent volume when local storage is in use. | ReadWriteOnce |
+    | `nexusData.local.storageClass.provisioner`                  | The local volume provisioner. | kubernetes.io/no-provisioner |
+    | `nexusData.local.pv.name`                  | A prefix for the name of the local storage persistent volume. | nexusrepo-local-storage-pv |
+    | `nexusData.local.pv.size`                  | The amount of local storage to specify in the persistent volume. | 2Gi |
+    | `nexusData.local.pv.matchNodes`                  | A names (space delimited) of the Openshift cluster nodes to specify for the local persistent volume's node affinity. | example-node-1 example-node-2 example-node-3 |
+    | `nexusData.nfs.enabled`                                   |  Whether to enable nfs storage. This is only used when `statefulset.container.env.clustered` is true | false |
+    | `nexusData.nfs.accessMode`                                | The access mode to use for the persistent volume when nfs storage is in use. | ReadWriteMany |
+    | `nexusData.nfs.storageClass.provisioner`                  | An nfs volume provisioner. E.g. nfs-subdir-external-provisioner | nfs-provisioner |
+    | `nexusData.nfs.pv.name`                  | A prefix for the name of the nfs persistent volume. | nexusrepo-nfs-storage-pv |
+    | `nexusData.nfs.pv.size`                  | The amount of nfs storage to specify in the persistent volume. | 2Gi |
+    | `nexusData.nfs.pv.exportedServerPaths`                  | The paths (space delimited) on the nfs server to bind to the nfs persistent volume | /serverPath1 /serverPath2 /serverPath3 |
+    | `nexusData.nfs.pv.mountOptions`                  | List of ount options for the nfs storage | - hard
+                                                                                                    - nfsvers=4.1 |
+    | `nexusData.nfs.pv.server | The nfs server ip | 70.71.156.85 |
+    | `license.secretName | A name for the Kubernetes secret object which stores the base64 representation of your Nexus Repository license specified via `license.fileContentsBase64` is stored | nexus-repo-license |
+    | `license.fileContentsBase64 | A base64 representation of your Nexus Repository license | your_license_file_contents_in_base_64 |
+    | `service.nexus.name`                                              |  The name of a kubernetes Service Object which allows access to Nexus Repository's main HTTP port | nexus-repo-service |
+    | `service.nexus.enabled`                                           |  Whether or not to create the Service object | false|
+    | `service.nexus.type`                                              |  The type of the Kubernetes Service | "NodePort"|
+    | `service.nexus.protocol`                                       |  The protocol  | TCP |
+    | `service.nexus.port`                                   |  The port to listen for incoming requests | 80|
+    | `service.nexus.targetPort`                                   |  The port to forward requests to | 8081 |
+    | `service.docker.name`                                              |  The name of a kubernetes Service Object which allows access to a docker repository within Nexus Repository | nexus-repo-docker-service |
+    | `service.docker.enabled`                                           |  Whether or not to create a Kubernetes Service object for a given docker repository within Nexus Repository | false |
+    | `service.docker.type`                                              |  The type of the Kubernetes Service | "NodePort"|
+    | `service.docker.protocol`                                       |  The protocol  | TCP |
+    | `service.docker.port`                                   |  The port to listen for incoming requests | 9090 |
+    | `service.docker.targetPort`                                   |  The port to forward requests to | 9090 |
 
   displayName: Nexus Repository HA Operator
   icon:

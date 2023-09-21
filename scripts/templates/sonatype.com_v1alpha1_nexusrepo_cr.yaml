@@ -9,18 +9,18 @@ spec:
   ingress:
     additionalRules: null
     annotations: null
-    defaultRule: "false"
+    defaultRule: false
     dockerIngress:
       annotations: null
-      enabled: "false"
+      enabled: false
       host: example.com
       name: nexus-docker-ingress
     dockerSubdomain: false
-    enabled: "false"
+    enabled: false
     host: example.com
     name: nexus-ingress
     tls:
-      enabled: "false"
+      enabled: false
       secretName: tlsSecretName
   license:
     fileContentsBase64: your_license_file_contents_in_base_64
@@ -28,16 +28,16 @@ spec:
   nexusData:
     local:
       accessMode: ReadWriteOnce
-      enabled: "true"
+      enabled: true
       pv:
         matchNodes: example-node-1 example-node-2 example-node-3
         name: nexusrepo-local-storage-pv
-        size: 10Gi
+        size: 2Gi
       storageClass:
         provisioner: kubernetes.io/no-provisioner
     nfs:
       accessMode: ReadWriteMany
-      enabled: "false"
+      enabled: false
       pv:
         exportedServerPaths: /serverPath1 /serverPath2 /serverPath3
         mountOptions:
@@ -46,27 +46,27 @@ spec:
         name: nexusrepo-nfs-storage-pv
         server:
           ip: 70.71.156.85
-        size: 10Gi
+        size: 2Gi
       storageClass:
         provisioner: nfs-provisioner
     pv:
       directoryPrefix: /var/nexus-repo-mgr-work-dir/work
     pvc:
       accessMode: ReadWriteOnce
-      size: 10Gi
+      size: 2Gi
     storageClass:
       name: nexusrepo-storage
       reclaimPolicy: Retain
   service:
     docker:
-      enabled: "false"
+      enabled: false
       name: nexus-repo-docker-service
       port: 9090
       protocol: TCP
       targetPort: 8081
       type: NodePort
     nexus:
-      enabled: "false"
+      enabled: false
       name: nexus-repo-service
       port: 80
       protocol: TCP
