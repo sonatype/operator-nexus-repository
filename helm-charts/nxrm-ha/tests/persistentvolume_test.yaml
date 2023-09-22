@@ -12,9 +12,9 @@ tests:
         replicaCount: 2
       nexusData:
         local:
-          enabled: "true"
+          enabled: true
         nfs:
-          enabled: "false"
+          enabled: false
     asserts:
       - isKind:
           of: PersistentVolume
@@ -30,11 +30,11 @@ tests:
 
       - equal:
           path: spec.capacity.storage
-          value: "200Gi"
+          value: "2Gi"
         documentIndex: 0
       - equal:
           path: spec.capacity.storage
-          value: "200Gi"
+          value: "2Gi"
         documentIndex: 1
 
       - equal:
@@ -119,11 +119,13 @@ tests:
 
   - it: should create nfs persistent volumes
     set:
+      statefulset:
+        replicaCount: 2
       nexusData:
         local:
-          enabled: "false"
+          enabled: false
         nfs:
-          enabled: "true"
+          enabled: true
     asserts:
       - isKind:
           of: PersistentVolume
@@ -141,7 +143,7 @@ tests:
 
       - equal:
           path: spec.capacity.storage
-          value: "200Gi"
+          value: "2Gi"
 
       - equal:
           path: spec.volumeMode

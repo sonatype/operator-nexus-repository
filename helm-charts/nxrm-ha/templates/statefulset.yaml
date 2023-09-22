@@ -96,7 +96,7 @@ spec:
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
   {{- end }}
-  {{-if or .Values.nexusData.local.enabled .Values.nexusData.nfs.enabled }}
+  {{- if or .Values.nexusData.local.enabled .Values.nexusData.nfs.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: nexusdata
