@@ -81,7 +81,7 @@ nexusData:
         - hard
         - nfsvers=4.1
       server:
-        ip: 70.71.156.85 #NFS server IP address
+        ip: nfs_server_ip #NFS server IP address
 license:
   secretName: nexus-repo-license
   fileContentsBase64: your_license_file_contents_in_base_64

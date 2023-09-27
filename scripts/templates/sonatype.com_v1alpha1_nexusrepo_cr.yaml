@@ -45,7 +45,7 @@ spec:
           - nfsvers=4.1
         name: nexusrepo-nfs-storage-pv
         server:
-          ip: 70.71.156.85
+          ip: nfs_server_ip
         size: 2Gi
       storageClass:
         provisioner: nfs-provisioner
@@ -78,7 +78,7 @@ spec:
       env:
         clustered: false
         install4jAddVmParams: -Xms2703m -Xmx2703m
-        jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
+        jdbcUrl: null
         nexusInitialPassword: nexusabc
         password: nexus
         user: nexus

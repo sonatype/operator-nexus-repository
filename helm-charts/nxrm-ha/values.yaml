@@ -4,7 +4,7 @@ statefulset:
   name: nexusrepo-statefulset
   replicaCount: 1
   container:
-    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.59.0-ubi-1
+    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.60.0-ubi-1
     resources:
       # See help documentation, these are minimum system requirements
       requests:
@@ -81,7 +81,7 @@ nexusData:
         - hard
         - nfsvers=4.1
       server:
-        ip: 70.71.156.85 #NFS server IP address
+        ip: nfs_server_ip #NFS server IP address
 license:
   secretName: nexus-repo-license
   fileContentsBase64: your_license_file_contents_in_base_64
