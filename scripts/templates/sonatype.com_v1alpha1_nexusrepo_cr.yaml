@@ -28,7 +28,7 @@ spec:
   nexusData:
     local:
       accessMode: ReadWriteOnce
-      enabled: true
+      enabled: false
       pv:
         matchNodes: example-node-1 example-node-2 example-node-3
         name: nexusrepo-local-storage-pv

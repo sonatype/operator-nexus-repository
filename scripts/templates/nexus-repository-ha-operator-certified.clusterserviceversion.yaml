@@ -38,7 +38,7 @@ metadata:
             "nexusData": {
               "local": {
                 "accessMode": "ReadWriteOnce",
-                "enabled": true,
+                "enabled": false,
                 "pv": {
                   "matchNodes": "example-node-1 example-node-2 example-node-3",
                   "name": "nexusrepo-local-storage-pv",
@@ -214,14 +214,16 @@ spec:
     * Set the `statefulset.container.env.user` parameter to your database user name.
     * Set the `statefulset.container.env.password` parameter to your database password.
     * Set the `statefulset.container.env.clustered` parameter to true.
-    * You must setup storage for your Nexus Repository pods as described in the 'Storage' section below.
+    * You must setup local or NFS storage for your Nexus Repository pods as described in the 'Storage' section below.
 
     ### Storage
+    The default configuration uses an emptyDir volume for storing Nexus Repository logs. However, we strongly recommend that
+    you configure local or NFS storage as explained below.
+    
     #### Local storage
-    By default, this chart uses local volume storage for HA mode (i.e., when the `statefulset.container.env.clustered` parameter is set to true).
-    You must also set all the parameters specified in the HA mode section above accordingly. In addition, before installing an
-    instance of the operator's custom resource in HA mode, you'll need to create directories on each node in your
-    Kubernetes/OpenShift cluster for storing Nexus Repository runtime data (logs, config dump, etc.).
+    To enable local storage set the `nexusData.local.enabled` parameter to true and set the `nexusData.nfs.enabled` parameter to false.
+    In addition, you'll need to create directories on each node in your Kubernetes/OpenShift cluster for
+    storing Nexus Repository runtime data (logs, config dump, etc.).
 
       You must adhere to the following constraints regarding the names and number of directories to create on each node:
       * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
@@ -305,7 +307,7 @@ spec:
     | `nexusData.pvc.accessMode`                                  |  The persistent volume claim access mode | ReadWriteOnce |
     | `nexusData.storageClass.name`                               |  The name for the storage class. | nexusrepo-storage |
     | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for the storage class and persistent volume | Retain |
-    | `nexusData.local.enabled`                                   |  Whether to enable local storage. This is only used when `statefulset.container.env.clustered` is true | true |
+    | `nexusData.local.enabled`                                   |  Whether to enable local storage. | false |
     | `nexusData.local.accessMode`                                | The access mode to use for the persistent volume when local storage is in use. | ReadWriteOnce |
     | `nexusData.local.storageClass.provisioner`                  | The local volume provisioner. | kubernetes.io/no-provisioner |
     | `nexusData.local.pv.name`                  | A prefix for the name of the local storage persistent volume. | nexusrepo-local-storage-pv |
