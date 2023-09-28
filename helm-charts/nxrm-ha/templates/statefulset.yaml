@@ -96,18 +96,18 @@ spec:
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
   {{- end }}
-  {{- if  and (not .Values.nexusData.local.enabled)  (not .Values.nexusData.nfs.enabled) }}
+  {{- if  and (not .Values.nexusData.dynamicVolume.enabled) (not .Values.nexusData.local.enabled)  (not .Values.nexusData.nfs.enabled) }}
         - name: nexusdata
           emptyDir:
             sizeLimit: {{ .Values.nexusData.pvc.size }}
   {{- end }}
-  {{- if or .Values.nexusData.local.enabled .Values.nexusData.nfs.enabled }}
+  {{- if or .Values.nexusData.dynamicVolume.enabled .Values.nexusData.local.enabled .Values.nexusData.nfs.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: nexusdata
       spec:
         accessModes: [ {{ .Values.nexusData.pvc.accessMode }} ]
-        storageClassName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Values.nexusData.storageClass.name}}
+        storageClassName: {{ .Values.nexusData.storageClass.name}}
         resources:
           requests:
             storage: {{ .Values.nexusData.pvc.size }}

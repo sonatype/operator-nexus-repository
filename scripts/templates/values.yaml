@@ -59,6 +59,18 @@ nexusData:
   storageClass:
     name: nexusrepo-storage
     reclaimPolicy: Retain
+  dynamicVolume:
+    enabled: false
+    storageClass:
+      provisioner: "dynamic storage provisioner"
+    parameters:
+      type: type # For AWS e.g. io1, gp3. See Red Hat Openshift documentation for dynamic provisioning for more details
+      kind: kind # Azure only e.g. Managed. See Red Hat Openshift documentation for dynamic provisioning for more details
+      storageaccounttype: storageaccounttype # Azure only e.g. Premium_LRS. See Red Hat Openshift documentation for dynamic provisioning for more details
+      iopsPerGB: "10"
+      encrypted: "true"
+      kmsKeyId: keyvalue
+      fsType: ext4
   local:
     enabled: false
     accessMode: ReadWriteOnce

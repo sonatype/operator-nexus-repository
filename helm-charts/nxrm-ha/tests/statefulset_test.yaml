@@ -17,6 +17,8 @@ tests:
           name: abc123
         replicaCount: 2
       nexusData:
+        dynamicVolume:
+          enabled: true
         local:
           enabled: true
         nfs:
@@ -163,7 +165,7 @@ tests:
 
       - equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
-          value: "nxrm-ha-latest-nexusrepo-storage"
+          value: "nexusrepo-storage"
 
       - equal:
           path: spec.volumeClaimTemplates[0].spec.resources

@@ -180,4 +180,4 @@ tests:
 
       - equal:
           path: spec.nfs.server
-          value: 70.71.156.85
+          value: nfs_server_ip

@@ -36,6 +36,22 @@ metadata:
               "secretName": "nexus-repo-license"
             },
             "nexusData": {
+              "dynamicVolume": {
+                "accessMode": "ReadWriteOnce",
+                "enabled": false,
+                "parameters": {
+                  "type": "type",
+                  "kind": "kind",
+                  "storageaccounttype": "storageaccounttype",
+                  "iopsPerGB": "10",
+                  "encrypted": "true",
+                  "kmsKeyId": "kmsKeyId",
+                  "fsType": "ext4"
+                },
+                "storageClass": {
+                  "provisioner": "dynamic storage provisioner"
+                }
+              },      
               "local": {
                 "accessMode": "ReadWriteOnce",
                 "enabled": false,
