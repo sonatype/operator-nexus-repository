@@ -39,17 +39,9 @@ metadata:
               "dynamicVolume": {
                 "accessMode": "ReadWriteOnce",
                 "enabled": false,
-                "parameters": {
-                  "type": "type",
-                  "kind": "kind",
-                  "storageaccounttype": "storageaccounttype",
-                  "iopsPerGB": "10",
-                  "encrypted": "true",
-                  "kmsKeyId": "kmsKeyId",
-                  "fsType": "ext4"
-                },
+                "parameters": {},
                 "storageClass": {
-                  "provisioner": "dynamic storage provisioner"
+                  "provisioner": "provisioner"
                 }
               },      
               "local": {
