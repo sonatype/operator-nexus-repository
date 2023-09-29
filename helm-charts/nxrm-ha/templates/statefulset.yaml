@@ -75,13 +75,19 @@ spec:
               value: "{{ .Values.statefulset.container.env.password }}"
             - name: LICENSE_FILE
               value: /var/nexus-repo-license/nexus-repo-license.lic
+            {{- end }}
             - name: INSTALL4J_ADD_VM_PARAMS
+            {{- if .Values.statefulset.container.env.clustered }}
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
-          -Dnexus.licenseFile=${LICENSE_FILE} -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
-            {{ else }}
-            - name: INSTALL4J_ADD_VM_PARAMS
+              -Dnexus.licenseFile=${LICENSE_FILE} -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+            {{- else }}
+            {{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
-              -Dnexus.datastore.enabled=true -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+                          -Dnexus.datastore.enabled=true -Dnexus.licenseFile=${LICENSE_FILE} -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+            {{- else }}
+              value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
+                        -Dnexus.datastore.enabled=true -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
+            {{- end }}
             {{- end }}
             - name: NEXUS_SECURITY_INITIAL_PASSWORD
               value: "{{ .Values.statefulset.container.env.nexusInitialPassword }}"
