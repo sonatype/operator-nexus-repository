@@ -62,6 +62,11 @@ spec:
             {{- if .Values.statefulset.container.env.clustered }}
             - name: DATASTORE_CLUSTERED_ENABLED
               value: "{{ .Values.statefulset.container.env.clustered }}"
+            {{ else }}
+            - name: DATASTORE_ENABLED
+              value: "true"
+            {{- end }}
+            {{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
             - name: NEXUS_DATASTORE_NEXUS_JDBCURL
               value: "{{ .Values.statefulset.container.env.jdbcUrl }}"
             - name: NEXUS_DATASTORE_NEXUS_USERNAME
@@ -74,8 +79,6 @@ spec:
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
           -Dnexus.licenseFile=${LICENSE_FILE} -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
             {{ else }}
-            - name: DATASTORE_ENABLED
-              value: "true"
             - name: INSTALL4J_ADD_VM_PARAMS
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
               -Dnexus.datastore.enabled=true -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
