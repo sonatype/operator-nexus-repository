@@ -8,7 +8,9 @@ chart:
 tests:
   - it: should create storage class
     set:
-      nexusData.local.enabled: true
+      nexusData:
+        storageClass:
+          enabled: true
     asserts:
       - isKind:
           of: StorageClass
@@ -18,7 +20,7 @@ tests:
 
       - equal:
           path: provisioner
-          value: "kubernetes.io/no-provisioner"
+          value: "provisioner"
 
       - equal:
           path: volumeBindingMode
