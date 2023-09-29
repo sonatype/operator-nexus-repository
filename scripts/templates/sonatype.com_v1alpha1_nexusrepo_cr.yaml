@@ -28,40 +28,16 @@ spec:
   nexusData:
     dynamicVolume:
       enabled: false
-      storageClass:
-        provisioner: "provisioner"
-      parameters: {}
-    local:
-      accessMode: ReadWriteOnce
-      enabled: false
-      pv:
-        matchNodes: example-node-1 example-node-2 example-node-3
-        name: nexusrepo-local-storage-pv
-        size: 2Gi
-      storageClass:
-        provisioner: kubernetes.io/no-provisioner
-    nfs:
-      accessMode: ReadWriteMany
-      enabled: false
-      pv:
-        exportedServerPaths: /serverPath1 /serverPath2 /serverPath3
-        mountOptions:
-          - hard
-          - nfsvers=4.1
-        name: nexusrepo-nfs-storage-pv
-        server:
-          ip: nfs_server_ip
-        size: 2Gi
-      storageClass:
-        provisioner: nfs-provisioner
-    pv:
-      directoryPrefix: /var/nexus-repo-mgr-work-dir/work
     pvc:
       accessMode: ReadWriteOnce
       size: 2Gi
     storageClass:
       name: nexusrepo-storage
       reclaimPolicy: Retain
+      enabled: false
+      volumeBindingMode: WaitForFirstConsumer
+      provisioner: "provisioner"
+      parameters: { }
   service:
     docker:
       enabled: false
