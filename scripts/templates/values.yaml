@@ -61,7 +61,7 @@ nexusData:
     volumeBindingMode: "WaitForFirstConsumer"
     provisioner: "provisioner" # E.g. kubernetes.io/no-provisioner. For dynamic provisioners see: https://docs.openshift.com/container-platform/4.13/storage/dynamic-provisioning.html
     parameters: {}
-  dynamicVolume:
+  volumeClaimTemplate:
     enabled: false
 license:
   secretName: nexus-repo-license

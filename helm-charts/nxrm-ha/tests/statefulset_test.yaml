@@ -17,7 +17,7 @@ tests:
           name: abc123
         replicaCount: 2
       nexusData:
-        dynamicVolume:
+        volumeClaimTemplate:
           enabled: true
     asserts:
       - isKind:

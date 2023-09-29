@@ -36,7 +36,7 @@ metadata:
               "secretName": "nexus-repo-license"
             },
             "nexusData": {
-              "dynamicVolume": {
+              "volumeClaimTemplate": {
                 "enabled": false,
               },
               "pvc": {
@@ -197,7 +197,8 @@ spec:
     * Ensure the appropriate Container Storage Interface (CSI) driver(s) are installed for your chosen OpenShift cloud deployment. Please, refer to OpenShift documentation for details on configuring CSI drivers.
 
     #### On premise deployments
-    * Attach separate disks (i.e. separate from the root disk) to your worker nodes and use the local volume provisioner to dynamically request storage via your chosen storage class.
+    * Attach separate disks (i.e. separate from the root disk) to your worker nodes and use the Local Storage Operator to automatically create persistent volumes for 
+    your chosen storage class. You can then use the same storage class name as the value of the `nexusData.storageClass.name` property and also set `nexusData.volumeClaimTemplate.enabled` to true.
 
     ### Additional configuration
     * Once the operator has created the server instance and it is running, you can further configure Nexus Repository via the NexusRepo custom resource:
@@ -246,13 +247,13 @@ spec:
     | `ingress.dockerIngress.annotations`                         |  Annotations for the docker Ingress object | null |
     | `nexusData.pvc.size`                                        |  The volume size to request for storing Nexus logs | 2Gi |
     | `nexusData.pvc.accessMode`                                  |  The persistent volume claim access mode | ReadWriteOnce |
-    | `nexusData.storageClass.name`                               |  The name for the storage class. | nexusrepo-storage |
+    | `nexusData.storageClass.name`                               |  The name of the storage class to use for dynamically requesting that storage be provisioned when using dynamic provisioning or to randomly select a pre-created persisted volume when using the Local Storage Operator. | nexusrepo-storage |
     | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for persistent volume's created by the storage class | Retain |
     | `nexusData.storageClass.enabled`                            |  Whether or not a storage class object should be created. | false |
     | `nexusData.storageClass.volumeBindingMode`                  |  It controls when volume binding and dynamic provisioning should occur | WaitForFirstConsumer |
     | `nexusData.storageClass.provisioner`                        |  The name of the volume provisioner | provisioner |
     | `nexusData.storageClass.parameters`                         |  The additional parameters for the storage class | {} |
-    | `nexusData.dynamicVolume.enabled`                           |  Whether or not dynamic volume should be requested for the pods | false |
+    | `nexusData.volumeClaimTemplate.enabled`                           |  Whether or not volume should be requested using a claim template. You should set this property to true when using dynamic volume provisioning (cloud deployments) or if you're using Local Storage Operator to automatically create persistent volumes for locally attached disks (i.e. not root disk) | false |
     | `license.secretName | A name for the Kubernetes secret object which stores the base64 representation of your Nexus Repository license specified via `license.fileContentsBase64` is stored | nexus-repo-license |
     | `license.fileContentsBase64 | A base64 representation of your Nexus Repository license | your_license_file_contents_in_base_64 |
     | `service.nexus.name`                                              |  The name of a kubernetes Service Object which allows access to Nexus Repository's main HTTP port | nexus-repo-service |

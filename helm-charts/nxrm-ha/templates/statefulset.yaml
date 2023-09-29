@@ -96,12 +96,12 @@ spec:
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
   {{- end }}
-  {{- if  (not .Values.nexusData.dynamicVolume.enabled) }}
+  {{- if  (not .Values.nexusData.volumeClaimTemplate.enabled) }}
         - name: nexusdata
           emptyDir:
             sizeLimit: {{ .Values.nexusData.pvc.size }}
   {{- end }}
-  {{- if .Values.nexusData.dynamicVolume.enabled }}
+  {{- if .Values.nexusData.volumeClaimTemplate.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: nexusdata

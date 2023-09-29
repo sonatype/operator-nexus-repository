@@ -26,7 +26,7 @@ spec:
     fileContentsBase64: your_license_file_contents_in_base_64
     secretName: nexus-repo-license
   nexusData:
-    dynamicVolume:
+    volumeClaimTemplate:
       enabled: false
     pvc:
       accessMode: ReadWriteOnce
