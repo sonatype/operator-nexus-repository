@@ -38,7 +38,7 @@ metadata:
             "nexusData": {
               "dynamicVolume": {
                 "enabled": false,
-              },      
+              },
               "pvc": {
                 "accessMode": "ReadWriteOnce",
                 "size": "2Gi"
@@ -187,48 +187,17 @@ spec:
     * Set the `statefulset.container.env.user` parameter to your database user name.
     * Set the `statefulset.container.env.password` parameter to your database password.
     * Set the `statefulset.container.env.clustered` parameter to true.
-    * You must setup local or NFS storage for your Nexus Repository pods as described in the 'Storage' section below.
+    * You must use a persistent volume as described in the 'Storage' section below.
 
     ### Storage
     The default configuration uses an emptyDir volume for storing Nexus Repository logs. However, we strongly recommend that
-    you configure local or NFS storage as explained below.
-    
-    #### Local storage
-    To enable local storage set the `nexusData.local.enabled` parameter to true and set the `nexusData.nfs.enabled` parameter to false.
-    In addition, you'll need to create directories on each node in your Kubernetes/OpenShift cluster for
-    storing Nexus Repository runtime data (logs, config dump, etc.).
+    you configure dynamic provisioning of persistent storage based on your deployment environment as explained below.
 
-      You must adhere to the following constraints regarding the names and number of directories to create on each node:
-      * The directory names must have the value specified for the ```nexusData.pv.directoryPrefix``` parameter
-       in the custom resource. It is best for this to be a sub directory of ```/var```.
-      * The directory names must have an integer as the suffix and must follow numeric order beginning with 0 (i.e., the first ending with 0, the next ending with 1, etc.).
-      * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the
-      custom resource.
-      * You must chown all the directories you create to ```200:200```.
-      * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/var/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on each node:
-      ```
-      mkdir -p /var/nexus-repo-work/work0
-      mkdir -p /var/nexus-repo-work/work1
-      mkdir -p /var/nexus-repo-work/work2
-      ```
-      and chown: ```chown -R 200:200 /var/nexus-repo-work/ ```
+    #### Cloud deployments (AWS/Azure/Google Cloud)
+    * Ensure the appropriate Container Storage Interface (CSI) driver(s) are installed for your chosen OpenShift cloud deployment. Please, refer to OpenShift documentation for details on configuring CSI drivers.
 
-    ##### Network storage
-    This chart also support NFS storage. If you wish to use NFS storage, do as follows:
-      * Set ```nexusData.nfs.enabled``` to true in your custom resource.
-      * Set ```nexusData.local.enabled``` to false in your custom resource.
-      * Set all the parameters specified in the HA mode section above accordingly.
-      * Set additional configuration for your NFS via the ```nexusData.nfs``` section in your custom resource.
-      * Create directories on your NFS server based on the following constraints:
-        * The number of directories you create should be driven by the value specified for the ```statefulset.replicaCount``` in the custom resource.
-        * You must set appropriate write permissions for all subdirectories.
-        * For example, if the value of ```nexusData.pv.directoryPrefix``` is ```/nexus-repo-work/work``` and ```statefulset.replicaCount``` is 3, then you should create the following directories on your NFS server:
-          ```
-          mkdir -p /nfs_root/nexus-repo-work/work0
-          mkdir -p /nfs_root/nexus-repo-work/work1
-          mkdir -p /nfs_root/nexus-repo-work/work2
-          ```
-        * Ensure the appropriate write permissions are set for the above subdirectories on your NFS server.
+    #### On premise deployments
+    * Attach separate disks (i.e. separate from the root disk) to your worker nodes and use the local volume provisioner to dynamically request storage via your chosen storage class.
 
     ### Additional configuration
     * Once the operator has created the server instance and it is running, you can further configure Nexus Repository via the NexusRepo custom resource:
@@ -275,26 +244,15 @@ spec:
     | `ingress.dockerIngress.enabled`                             |  Whether or not to create an Ingress for a docker repository | false|
     | `ingress.dockerIngress.host`                                |  The docker Ingress's host | "example.com"|
     | `ingress.dockerIngress.annotations`                         |  Annotations for the docker Ingress object | null |
-    | `nexusData.pv.directoryPrefix`                              |  The directory prefix specified in a persistent volume object when using local storage for storing Nexus logs | /var/nexus-repo-mgr-work-dir/work |
-    | `nexusData.pvc.size`                                        |  The size for the persistent volume claim object when using local/nfs storage for storing Nexus logs | 2Gi |
+    | `nexusData.pvc.size`                                        |  The volume size to request for storing Nexus logs | 2Gi |
     | `nexusData.pvc.accessMode`                                  |  The persistent volume claim access mode | ReadWriteOnce |
     | `nexusData.storageClass.name`                               |  The name for the storage class. | nexusrepo-storage |
-    | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for the storage class and persistent volume | Retain |
-    | `nexusData.local.enabled`                                   |  Whether to enable local storage. | false |
-    | `nexusData.local.accessMode`                                | The access mode to use for the persistent volume when local storage is in use. | ReadWriteOnce |
-    | `nexusData.local.storageClass.provisioner`                  | The local volume provisioner. | kubernetes.io/no-provisioner |
-    | `nexusData.local.pv.name`                  | A prefix for the name of the local storage persistent volume. | nexusrepo-local-storage-pv |
-    | `nexusData.local.pv.size`                  | The amount of local storage to specify in the persistent volume. | 2Gi |
-    | `nexusData.local.pv.matchNodes`                  | A names (space delimited) of the Openshift cluster nodes to specify for the local persistent volume's node affinity. | example-node-1 example-node-2 example-node-3 |
-    | `nexusData.nfs.enabled`                                   |  Whether to enable nfs storage. This is only used when `statefulset.container.env.clustered` is true | false |
-    | `nexusData.nfs.accessMode`                                | The access mode to use for the persistent volume when nfs storage is in use. | ReadWriteMany |
-    | `nexusData.nfs.storageClass.provisioner`                  | An nfs volume provisioner. E.g. nfs-subdir-external-provisioner | nfs-provisioner |
-    | `nexusData.nfs.pv.name`                  | A prefix for the name of the nfs persistent volume. | nexusrepo-nfs-storage-pv |
-    | `nexusData.nfs.pv.size`                  | The amount of nfs storage to specify in the persistent volume. | 2Gi |
-    | `nexusData.nfs.pv.exportedServerPaths`                  | The paths (space delimited) on the nfs server to bind to the nfs persistent volume | /serverPath1 /serverPath2 /serverPath3 |
-    | `nexusData.nfs.pv.mountOptions`                  | List of ount options for the nfs storage | - hard
-                                                                                                    - nfsvers=4.1 |
-    | `nexusData.nfs.pv.server | The nfs server ip | 70.71.156.85 |
+    | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for persistent volume's created by the storage class | Retain |
+    | `nexusData.storageClass.enabled`                            |  Whether or not a storage class object should be created. | false |
+    | `nexusData.storageClass.volumeBindingMode`                  |  It controls when volume binding and dynamic provisioning should occur | WaitForFirstConsumer |
+    | `nexusData.storageClass.provisioner`                        |  The name of the volume provisioner | provisioner |
+    | `nexusData.storageClass.parameters`                         |  The additional parameters for the storage class | {} |
+    | `nexusData.dynamicVolume.enabled`                           |  Whether or not dynamic volume should be requested for the pods | false |
     | `license.secretName | A name for the Kubernetes secret object which stores the base64 representation of your Nexus Repository license specified via `license.fileContentsBase64` is stored | nexus-repo-license |
     | `license.fileContentsBase64 | A base64 representation of your Nexus Repository license | your_license_file_contents_in_base_64 |
     | `service.nexus.name`                                              |  The name of a kubernetes Service Object which allows access to Nexus Repository's main HTTP port | nexus-repo-service |
