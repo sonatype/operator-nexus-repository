@@ -51,42 +51,18 @@ ingress:
     enabled: false
     annotations: null
 nexusData:
-  pv:
-    directoryPrefix: /var/nexus-repo-mgr-work-dir/work
   pvc:
     size: 2Gi
     accessMode: ReadWriteOnce
   storageClass:
     name: nexusrepo-storage
     reclaimPolicy: Retain
+    enabled: false
+    volumeBindingMode: "WaitForFirstConsumer"
+    provisioner: "provisioner" # E.g. kubernetes.io/no-provisioner. For dynamic provisioners see: https://docs.openshift.com/container-platform/4.13/storage/dynamic-provisioning.html
+    parameters: {}
   dynamicVolume:
     enabled: false
-    storageClass:
-      provisioner: "provisioner"
-    parameters: {}
-  local:
-    enabled: false
-    accessMode: ReadWriteOnce
-    storageClass:
-      provisioner: kubernetes.io/no-provisioner
-    pv:
-      name: nexusrepo-local-storage-pv
-      size: 2Gi
-      matchNodes: "example-node-1 example-node-2 example-node-3"
-  nfs:
-    enabled: false
-    accessMode: ReadWriteMany
-    storageClass:
-      provisioner: nfs-provisioner
-    pv:
-      name: nexusrepo-nfs-storage-pv
-      size: 2Gi
-      exportedServerPaths: "/serverPath1 /serverPath2 /serverPath3"
-      mountOptions:
-        - hard
-        - nfsvers=4.1
-      server:
-        ip: nfs_server_ip #NFS server IP address
 license:
   secretName: nexus-repo-license
   fileContentsBase64: your_license_file_contents_in_base_64
