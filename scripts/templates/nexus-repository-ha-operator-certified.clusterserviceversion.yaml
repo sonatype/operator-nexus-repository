@@ -36,20 +36,20 @@ metadata:
               "secretName": "nexus-repo-license"
             },
             "nexusData": {
-              "volumeClaimTemplate": {
-                "enabled": false,
-              },
               "pvc": {
                 "accessMode": "ReadWriteOnce",
                 "size": "2Gi"
               },
               "storageClass": {
-                "name": "nexusrepo-storage",
-                "reclaimPolicy": "Retain",
                 "enabled": false,
-                "volumeBindingMode": "WaitForFirstConsumer",
+                "name": "nexusrepo-storage",
+                "parameters": {},
                 "provisioner": "provisioner",
-                 "parameters": {}
+                "reclaimPolicy": "Retain",
+                "volumeBindingMode": "WaitForFirstConsumer"
+              },
+              "volumeClaimTemplate": {
+                "enabled": false
               }
             },
             "service": {
