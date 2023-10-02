@@ -9,64 +9,45 @@ spec:
   ingress:
     additionalRules: null
     annotations: null
-    defaultRule: "false"
+    defaultRule: false
     dockerIngress:
       annotations: null
-      enabled: "false"
+      enabled: false
       host: example.com
       name: nexus-docker-ingress
     dockerSubdomain: false
-    enabled: "false"
+    enabled: false
     host: example.com
     name: nexus-ingress
     tls:
-      enabled: "false"
+      enabled: false
       secretName: tlsSecretName
   license:
     fileContentsBase64: your_license_file_contents_in_base_64
     secretName: nexus-repo-license
   nexusData:
-    local:
-      accessMode: ReadWriteOnce
-      enabled: "true"
-      pv:
-        matchNodes: example-node-1 example-node-2 example-node-3
-        name: nexusrepo-local-storage-pv
-        size: 10Gi
-      storageClass:
-        provisioner: kubernetes.io/no-provisioner
-    nfs:
-      accessMode: ReadWriteMany
-      enabled: "false"
-      pv:
-        exportedServerPaths: /serverPath1 /serverPath2 /serverPath3
-        mountOptions:
-          - hard
-          - nfsvers=4.1
-        name: nexusrepo-nfs-storage-pv
-        server:
-          ip: 70.71.156.85
-        size: 10Gi
-      storageClass:
-        provisioner: nfs-provisioner
-    pv:
-      directoryPrefix: /var/nexus-repo-mgr-work-dir/work
+    volumeClaimTemplate:
+      enabled: false
     pvc:
       accessMode: ReadWriteOnce
-      size: 10Gi
+      size: 2Gi
     storageClass:
       name: nexusrepo-storage
       reclaimPolicy: Retain
+      enabled: false
+      volumeBindingMode: WaitForFirstConsumer
+      provisioner: "provisioner"
+      parameters: { }
   service:
     docker:
-      enabled: "false"
+      enabled: false
       name: nexus-repo-docker-service
       port: 9090
       protocol: TCP
       targetPort: 8081
       type: NodePort
     nexus:
-      enabled: "false"
+      enabled: false
       name: nexus-repo-service
       port: 80
       protocol: TCP
@@ -78,11 +59,11 @@ spec:
       env:
         clustered: false
         install4jAddVmParams: -Xms2703m -Xmx2703m
-        jdbcUrl: jdbc:postgresql://your_database_server:5432/nexus
+        jdbcUrl: null
         nexusInitialPassword: nexusabc
         password: nexus
         user: nexus
-      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:98ecd45ed9a9a8f92fcc53c3e209ddcb8b4d71a21ba3981278fe8d542d702686
+      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:13401ad70373990ea8d70c6127dcaf9bc79de8e63af90754988a905ee4b8d1bc
       pullPolicy: IfNotPresent
       resources:
         limits:
