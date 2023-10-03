@@ -7,7 +7,7 @@ IBM Operator for Sonatype Nexus Repository
 The default configuration uses an emptyDir volume for storing Nexus Repository logs. However, we strongly recommend that 
 you configure dynamic provisioning of persistent storage based on your deployment environment as explained below.
     
-#### Cloud deployments (AWS/Azure/Google Cloud)
+#### Cloud deployments (AWS/Azure)
 * Ensure the appropriate Container Storage Interface (CSI) driver(s) are installed for your chosen OpenShift cloud deployment. Please, refer to OpenShift documentation for details on configuring CSI drivers.
 
 #### On premise deployments
