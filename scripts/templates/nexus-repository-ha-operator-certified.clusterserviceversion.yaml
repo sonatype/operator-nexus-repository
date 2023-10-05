@@ -214,7 +214,7 @@ spec:
 
     #### Configuring the operator for dynamic persistent volume provisioning
     * Set the `nexusData.storageClass.name` parameter to a storage class name. This could be one of the default storage classes automatically created in your OpenShift cluster (e.g., if you're using ROSA) or one that you would like the operator to create.
-    * If you would like to create a dedicated storage class (i.e. you don't want to use the default), then in addition to specifying a value for `nexusData.storageClass.name`, you must also set `nexusData.storageClass.enabled` parameter to true.
+    * If you would like to create a dedicated storage class (i.e., you don't want to use the default), then in addition to specifying a value for `nexusData.storageClass.name`, you must also set `nexusData.storageClass.enabled` parameter to `true`.
     * Set the `nexusData.volumeClaimTemplate.enabled` parameter to true.
 
     ### Additional configuration
