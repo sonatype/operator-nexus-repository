@@ -8,7 +8,7 @@ The default configuration uses an emptyDir volume for storing Nexus Repository l
 you configure dynamic provisioning of persistent storage based on your deployment environment as explained below.
     
 #### Cloud deployments (AWS/Azure)
-* Ensure the appropriate Container Storage Interface (CSI) driver(s) are installed for your chosen OpenShift cloud deployment. Please, refer to OpenShift documentation for details on configuring CSI drivers. 
+* Ensure the appropriate Container Storage Interface (CSI) driver(s) are installed for your chosen OpenShift cloud deployment. Please refer to OpenShift documentation for details on configuring CSI drivers. 
   
 Note: if you're using Red Hat OpenShift on AWS (ROSA), CSI drivers for dynamically provisioning EBS volumes are installed by default; you should see associated storage classes for them in your cluster web console similar to what's shown below:
 
