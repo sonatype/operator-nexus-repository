@@ -1,7 +1,7 @@
 # DO NOT MODIFY. This is produced by template.
 ---
 channels:
-  - currentCSV: nexus-repository-ha-operator-certified.v3.61.0-2
+  - currentCSV: nexus-repository-ha-operator-certified.v3.62.0-1
     name: stable
 defaultChannel: stable
 packageName: nexus-repository-ha-operator-certified
