@@ -9,11 +9,13 @@ spec:
   serviceName: "{{ .Chart.Name }}-{{ .Chart.Version  | replace "." "-"}}-{{ .Release.Name }}-{{ .Values.statefulset.name }}"
   selector:
     matchLabels:
-      app: nxrm
+      app: {{ template "nexus.name" . }}
+      release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: nxrm
+        app: {{ template "nexus.name" . }}
+        release: {{ .Release.Name }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.statefulset.container.terminationGracePeriod }}
       {{- if .Values.statefulset.imagePullSecrets }}

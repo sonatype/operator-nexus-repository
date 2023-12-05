@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name:  {{ .Chart.Name }}-{{ .Values.service.nexus.name }}
+  name: {{ template "nexus.fullname" . }}-service
   labels:
     app: nxrm
 spec:
   type: {{ .Values.service.nexus.type }}
   selector:
-    app: nxrm
+    app: {{ template "nexus.name" . }}
   ports:
     - protocol: {{ .Values.service.nexus.protocol }}
       port: {{ .Values.service.nexus.port }}
