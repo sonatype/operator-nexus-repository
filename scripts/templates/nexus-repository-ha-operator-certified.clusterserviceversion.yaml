@@ -125,6 +125,7 @@ metadata:
     support: Sonatype
     certified: "true"
     olm.skipRange: "<{{operatorVersion}}"
+    replaces: "{{previousOperatorVersion}}"
   name: nexus-repository-ha-operator-certified.v{{operatorVersion}}
   namespace: placeholder
 spec:
