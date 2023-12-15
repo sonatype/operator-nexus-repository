@@ -2,9 +2,9 @@
 
 if [ $# -lt 1 ]; then
     echo "Usage: $0 image <operatorVersion> <certAppVersion>"
-    echo "Usage: $0 bundle <operatorVersion> <operatorImageSHA> <certAppImageSHA>"
+    echo "Usage: $0 bundle <previousOperatorVersion> <operatorVersion> <operatorImageSHA> <certAppImageSHA>"
     echo "Ex: $0 image 3.20.0-1 3.20.0-ubi-1"
-    echo "Ex: $0 bundle 3.20.0-1 registry...@sha256:ab12... registry...@sha256:ab12..."
+    echo "Ex: $0 bundle 3.19.0-1 3.20.0-1 registry...@sha256:ab12... registry...@sha256:ab12..."
     exit 1
 fi
 
@@ -42,18 +42,20 @@ if [ "$1" = "image" ]; then
 fi
 
 if [ "$1" = "bundle" ]; then
-    if [ $# -ne 4 ]; then
-        echo "Usage: $0 bundle <operatorVersion> <operatorImageSHA> <certAppImageSHA>"
-        echo "Ex: $0 bundle 3.20.0-1 registry...@sha256:ab12... registry...@sha256:ab12..."
+    if [ $# -ne 5 ]; then
+        echo "Usage: $0 bundle <previousOperatorVersion> <operatorVersion> <operatorImageSHA> <certAppImageSHA>"
+        echo "Ex: $0 bundle 3.19.0-1 3.20.0-1 registry...@sha256:ab12... registry...@sha256:ab12..."
         exit 1
     fi
 
-    operatorVersion=$2
-    operatorSHA=$3
-    certAppSHA=$4
+    previousOperatorVersion=$2
+    operatorVersion=$3
+    operatorSHA=$4
+    certAppSHA=$5
 
     applyTemplate() {
         sed "s!{{shortVersion}}!${shortVersion}!g" \
+        | sed "s!{{previousOperatorVersion}}!${previousOperatorVersion}!g" \
         | sed "s!{{certAppSHA}}!${certAppSHA}!g" \
         | sed "s!{{operatorSHA}}!${operatorSHA}!g" \
         | sed "s!{{operatorVersion}}!${operatorVersion}!g" \

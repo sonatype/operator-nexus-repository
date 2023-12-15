@@ -81,7 +81,7 @@ metadata:
                   "password": "nexus",
                   "user": "nexus"
                 },
-                "imageName": "{{certAppSHA}}",
+                "imageName": "registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:53e01b9ef00537ef8c64bc1820afa970c43b22312ce5871477129f3205282438",
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
@@ -119,21 +119,20 @@ metadata:
     description: |-
       Nexus Repository is the central source of control to efficiently manage all binaries
       and build artifacts across your DevOps pipeline.
-    containerImage: {{operatorSHA}}
+    containerImage: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:5ed6e8a564c1f0cc0bba66ba3c718c151d033b6da91b5a51981aa0a138689e07
     repository: https://github.com/sonatype/operator-nexus-repository
     createdAt: 2023-08-14
     support: Sonatype
     certified: "true"
-    olm.skipRange: "<{{operatorVersion}}"
-    replaces: "{{previousOperatorVersion}}"
-  name: nexus-repository-ha-operator-certified.v{{operatorVersion}}
+    olm.skipRange: "<3.63.0-1"
+  name: nexus-repository-ha-operator-certified.v3.63.0-1
   namespace: placeholder
 spec:
   relatedImages:
     - name: nexus-repository-ha-operator-certified
-      image: {{operatorSHA}}
+      image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:5ed6e8a564c1f0cc0bba66ba3c718c151d033b6da91b5a51981aa0a138689e07
     - name: nexus-repository-manager
-      image: {{certAppSHA}}
+      image: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:53e01b9ef00537ef8c64bc1820afa970c43b22312ce5871477129f3205282438
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
@@ -358,8 +357,8 @@ spec:
                       - name: OPERATOR_NAME
                         value: nexus-repository-ha-operator-certified
                       - name: RELATED_IMAGE_NEXUS
-                        value: {{certAppSHA}}
-                    image: {{operatorSHA}}
+                        value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:53e01b9ef00537ef8c64bc1820afa970c43b22312ce5871477129f3205282438
+                    image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:5ed6e8a564c1f0cc0bba66ba3c718c151d033b6da91b5a51981aa0a138689e07
                     imagePullPolicy: Always
                     name: nexus-repository-ha-operator-certified
                     resources: {}
@@ -476,4 +475,4 @@ spec:
   maturity: stable
   provider:
     name: Sonatype
-  version: {{operatorVersion}}
+  version: 3.63.0-1
