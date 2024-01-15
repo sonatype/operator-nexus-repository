@@ -18,7 +18,7 @@ spec:
       containers:
         - name: nexus-repository-ha-operator-certified
           # Replace this with the built image name
-          image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:5ed6e8a564c1f0cc0bba66ba3c718c151d033b6da91b5a51981aa0a138689e07
+          image: registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:690c671a03a40d3f39f9e21bcffd41786a456f965e8736e33bd0e4cb746d1854
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -40,4 +40,4 @@ spec:
             - name: OPERATOR_NAME
               value: "nexus-repository-ha-operator-certified"
             - name: RELATED_IMAGE_NEXUS
-              value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:53e01b9ef00537ef8c64bc1820afa970c43b22312ce5871477129f3205282438
+              value: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:78fb535d29cadc127785f34550bd24392f2e5aa810e4c871ec313bb1e61f402e
