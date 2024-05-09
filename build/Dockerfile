@@ -4,7 +4,7 @@ FROM quay.io/operator-framework/helm-operator@sha256:e82703bd9ce640b048c00d0c2e8
 # Required OpenShift Labels
 LABEL name="Nexus Repository HA Operator" \
       vendor="Sonatype" \
-      version="3.66.0" \
+      version="3.68.0" \
       release="1" \
       summary="The Nexus Repository with universal support for popular component formats." \
       description="The Nexus Repository with universal support for popular component formats."
