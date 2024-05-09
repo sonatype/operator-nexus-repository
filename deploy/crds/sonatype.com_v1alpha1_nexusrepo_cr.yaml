@@ -63,7 +63,7 @@ spec:
         nexusInitialPassword: nexusabc
         password: nexus
         user: nexus
-      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:9753bb906855550aa7a4b128df978d272a4e03935f8eeca9a188d2b9c4dd9f55
+      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:c153b9afac170e563b20c63d74cd327b74c18adf43731878ca0a2d567f61162a
       pullPolicy: IfNotPresent
       resources:
         limits:
