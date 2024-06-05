@@ -6,83 +6,221 @@ metadata:
   name: nexusrepo-sample
 spec:
   # Default values copied from <project_dir>/helm-charts/nxrm-ha/values.yaml
+  aws:
+    clusterRegion: us-east-1
+    enabled: false
+    externaldns:
+      awsZoneType: private
+      domainFilter: example.com
+      enabled: false
+    fluentbit:
+      clusterName: nxrm-nexus
+      enabled: false
+      fluentBitVersion: 2.28.0
+    secretmanager:
+      enabled: false
+  azure:
+    enabled: false
+    keyvault:
+      enabled: false
+  config:
+    data: null
+    enabled: false
+    mountPath: /sonatype-nexus-conf
   ingress:
     additionalRules: null
     annotations: null
     defaultRule: false
-    dockerIngress:
-      annotations: null
-      enabled: false
-      host: example.com
-      name: nexus-docker-ingress
-    dockerSubdomain: false
+    dockersubdomain: false
     enabled: false
-    host: example.com
+    host: null
+    hostPath: /
+    ingressClassName: null
     name: nexus-ingress
-    tls:
-      enabled: false
-      secretName: tlsSecretName
-  license:
-    fileContentsBase64: your_license_file_contents_in_base_64
-    secretName: nexus-repo-license
-  nexusData:
-    volumeClaimTemplate:
-      enabled: false
-    pvc:
-      accessMode: ReadWriteOnce
-      size: 2Gi
-    storageClass:
-      name: nexusrepo-storage
-      reclaimPolicy: Retain
-      enabled: false
-      volumeBindingMode: WaitForFirstConsumer
-      provisioner: "provisioner"
-      parameters: { }
-  service:
+  logStorage:
+    combineTaskLogs: true
+    tailSecondaryLogs: true
+  nexus:
     docker:
       enabled: false
-      name: nexus-repo-docker-service
-      port: 9090
       protocol: TCP
-      targetPort: 8081
       type: NodePort
+    extraLabels: {}
+    extraSelectorLabels: {}
+    properties:
+      data: null
+      override: false
+    securityContext:
+      runAsUser: 200
+  pvc:
+    accessModes: ReadWriteOnce
+    existingClaim: null
+    storage: 2Gi
+    volumeClaimTemplate:
+      enabled: false
+  secret:
+    aws:
+      adminpassword:
+        arn: arn:aws:secretsmanager:us-east-1:000000000000:secret:admin-nxrm-password
+      license:
+        arn: arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrm-nexus-license
+      rds:
+        arn: arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrmrds-cred-nexus
+    azure:
+      keyvaultName: yourazurekeyvault
+      tenantId: azureTenantId
+      usePodIdentity: false
+      useVMManagedIdentity: true
+      userAssignedIdentityID: userAssignedIdentityID
+    db:
+      host: nxrm-db-host
+      hostAlias: nxrm-db-host-alias
+      password: nxrm-db-password
+      passwordAlias: nxrm-db-password-alias
+      user: nxrm-db-user
+      userAlias: nxrm-db-user-alias
+    dbSecret:
+      enabled: false
+    license:
+      licenseSecret:
+        enabled: false
+        file: null
+        fileContentsBase64: your_license_file_contents_in_base_64
+        mountPath: /var/nexus-repo-license
+      name: nexus-repo-license.lic
+    nexusAdmin:
+      alias: admin-nxrm-password-alias
+      name: nexusAdminPassword
+    nexusAdminSecret:
+      adminPassword: yourinitialnexuspassword
+      enabled: false
+    provider: provider
+    secretProviderClass: secretProviderClass
+  service:
+    annotations: {}
+    headless:
+      annotations: {}
+      publishNotReadyAddresses: true
     nexus:
       enabled: false
-      name: nexus-repo-service
       port: 80
       protocol: TCP
       targetPort: 8081
       type: NodePort
+  serviceAccount:
+    annotations: null
+    enabled: false
+    name: nexus-repository-deployment-sa
   statefulset:
+    additionalContainers: null
+    additionalVolumeMounts: null
+    additionalVolumes: null
+    annotations: {}
+    auditLogContainer:
+      image:
+        repository: busybox
+        tag: 1.33.1
+      resources:
+        limits:
+          cpu: "0.2"
+          memory: 512Mi
+        requests:
+          cpu: "0.1"
+          memory: 256Mi
+    clustered: true
     container:
+      additionalEnv: null
       containerPort: 8081
       env:
-        clustered: false
         install4jAddVmParams: -Xms2703m -Xmx2703m
-        jdbcUrl: null
-        nexusInitialPassword: nexusabc
-        password: nexus
-        user: nexus
-      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:51411a8d13f8625105b156a1197895aef22463a7ed43f823da8259e75fcfbdb8
+        jdbcUrlParams: null
+        nexusDBName: nexus
+        nexusDBPort: 5432
+      image:
+        nexusTag: 3.70.1
+        repository: sonatype/nexus3
       pullPolicy: IfNotPresent
       resources:
         limits:
-          cpu: 4
-          memory: 8Gi
+          cpu: 16
+          memory: 16Gi
         requests:
-          cpu: 4
+          cpu: 8
           memory: 8Gi
       terminationGracePeriod: 120
+    hostAliases: []
     imagePullSecrets: {}
+    initContainers:
+      - args:
+          - -c
+          - mkdir -p /nexus-data/etc/logback && mkdir -p /nexus-data/log/tasks && mkdir
+            -p /nexus-data/log/audit && touch -a /nexus-data/log/tasks/allTasks.log && touch
+            -a /nexus-data/log/audit/audit.log && touch -a /nexus-data/log/request.log &&
+            chown -R '200:200' /nexus-data
+        command:
+          - /bin/sh
+        image: busybox:1.33.1
+        name: chown-nexusdata-owner-to-nexus-and-init-log-dir
+        resources:
+          limits:
+            cpu: "0.2"
+            memory: 512Mi
+          requests:
+            cpu: "0.1"
+            memory: 256Mi
+        volumeMounts:
+          - mountPath: /nexus-data
+            name: nexus-data
     livenessProbe:
       failureThreshold: 6
-      initialDelaySeconds: 240
+      initialDelaySeconds: 0
       path: /
       periodSeconds: 60
-    name: nexusrepo-statefulset
+      timeoutSeconds: 1
+    nodeSelector: {}
+    podAnnotations: {}
+    postStart:
+      command: null
+    preStart:
+      command: null
     readinessProbe:
       failureThreshold: 6
-      initialDelaySeconds: 240
+      initialDelaySeconds: 0
       path: /
       periodSeconds: 60
-    replicaCount: 1
+      timeoutSeconds: 1
+    replicaCount: 3
+    requestLogContainer:
+      image:
+        repository: busybox
+        tag: 1.33.1
+      resources:
+        limits:
+          cpu: "0.2"
+          memory: 512Mi
+        requests:
+          cpu: "0.1"
+          memory: 256Mi
+    startupProbe:
+      failureThreshold: 180
+      initialDelaySeconds: 0
+      path: /
+      periodSeconds: 10
+      timeoutSeconds: 1
+    taskLogContainer:
+      image:
+        repository: busybox
+        tag: 1.33.1
+      resources:
+        limits:
+          cpu: "0.2"
+          memory: 512Mi
+        requests:
+          cpu: "0.1"
+          memory: 256Mi
+  storageClass:
+    enabled: false
+    name: nexus-storage
+    provisioner: provisionerName
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer

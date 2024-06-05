@@ -1,10 +1,22 @@
-{{- if or .Values.statefulset.container.env.clustered (and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl)) }}
+{{- if .Values.secret.license.licenseSecret.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
+  name: {{ .Values.secret.license.name }}
+  labels:
+{{ include "nexus.labels" . | nindent 4 }}
+  {{- if .Values.nexus.extraLabels }}
+    {{- with .Values.nexus.extraLabels }}
+      {{ toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 type: Opaque
+{{- if .Values.secret.license.licenseSecret.file }}
 data:
-  nexus-repo-license.lic: |-
-    {{ $.Values.license.fileContentsBase64 }}
+  {{ .Values.secret.license.name }}: {{ .Values.secret.license.licenseSecret.file | b64enc }}
+{{ else if .Values.secret.license.licenseSecret.fileContentsBase64 }}  
+data:
+  {{ .Values.secret.license.name }}: |-
+    {{ .Values.secret.license.licenseSecret.fileContentsBase64 }}
+{{- end }}
 {{- end }}

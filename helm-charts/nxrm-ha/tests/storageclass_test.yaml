@@ -1,16 +1,25 @@
 suite: test storage class
 templates:
-  - storage-class.yaml
+  - storageclass.yaml
 release:
   name: "test-release"
 chart:
   version: "latest"
+  appVersion: "latest"
 tests:
   - it: should create storage class
     set:
-      nexusData:
-        storageClass:
-          enabled: true
+      storageClass:
+        enabled: true
+        name: "nexusrepo-storage"
+        provisioner: "provisioner"
+        parameters:
+          foo: bar
+          baz: bay
+      nexus:
+        extraLabels:
+          baz: bar
+          bay: foo
     asserts:
       - isKind:
           of: StorageClass
@@ -29,3 +38,19 @@ tests:
       - equal:
           path: reclaimPolicy
           value: "Retain"
+
+      - equal:
+          path: parameters
+          value:
+            foo: bar
+            baz: bay
+      - equal:
+          path: metadata.labels
+          value:
+            app.kubernetes.io/instance: test-release
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/name: nxrm-ha
+            app.kubernetes.io/version: latest
+            helm.sh/chart: nxrm-ha-latest
+            baz: bar
+            bay: foo
