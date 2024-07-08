@@ -1,5 +1,5 @@
 # DO NOT MODIFY. This is produced by template.
-FROM quay.io/operator-framework/helm-operator@sha256:de2a0a20c1c3b39c3de829196de9694d09f97cd18fda1004de855ed2b4c841ba
+FROM quay.io/operator-framework/helm-operator@sha256:9ff9668e2be6efeb00d4698152d1358888c26cee38a0fe2b78d48671de1da62e
 
 # Required OpenShift Labels
 LABEL name="Nexus Repository HA Operator" \
