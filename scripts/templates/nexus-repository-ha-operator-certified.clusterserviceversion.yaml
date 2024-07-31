@@ -12,104 +12,290 @@ metadata:
             "name": "nexusrepo-sample"
           },
           "spec": {
+            "aws": {
+              "clusterRegion": "us-east-1",
+              "enabled": false,
+              "externaldns": {
+                "awsZoneType": "private",
+                "domainFilter": "example.com",
+                "enabled": false
+              },
+              "fluentbit": {
+                "clusterName": "nxrm-nexus",
+                "enabled": false,
+                "fluentBitVersion": "2.28.0"
+              },
+              "secretmanager": {
+                "enabled": false
+              }
+            },
+            "azure": {
+              "enabled": false,
+              "keyvault": {
+                "enabled": false
+              }
+            },
+            "config": {
+              "data": null,
+              "enabled": false,
+              "mountPath": "/sonatype-nexus-conf"
+            },
             "ingress": {
               "additionalRules": null,
               "annotations": null,
               "defaultRule": false,
-              "dockerIngress": {
-                "annotations": null,
-                "enabled": false,
-                "host": "example.com",
-                "name": "nexus-docker-ingress"
-              },
-              "dockerSubdomain": false,
+              "dockersubdomain": false,
               "enabled": false,
-              "host": "example.com",
-              "name": "nexus-ingress",
-              "tls": {
+              "host": null,
+              "hostPath": "/",
+              "ingressClassName": null,
+              "name": "nexus-ingress"
+            },
+            "logStorage": {
+              "combineTaskLogs": true,
+              "tailSecondaryLogs": true
+            },
+            "nexus": {
+              "docker": {
                 "enabled": false,
-                "secretName": "tlsSecretName"
+                "protocol": "TCP",
+                "type": "NodePort"
+              },
+              "extraLabels": {},
+              "extraSelectorLabels": {},
+              "properties": {
+                "data": null,
+                "override": false
+              },
+              "securityContext": {
+                "runAsUser": 200
               }
             },
-            "license": {
-              "fileContentsBase64": "your_license_file_contents_in_base_64",
-              "secretName": "nexus-repo-license"
-            },
-            "nexusData": {
-              "pvc": {
-                "accessMode": "ReadWriteOnce",
-                "size": "2Gi"
-              },
-              "storageClass": {
-                "enabled": false,
-                "name": "nexusrepo-storage",
-                "parameters": {},
-                "provisioner": "provisioner",
-                "reclaimPolicy": "Retain",
-                "volumeBindingMode": "WaitForFirstConsumer"
-              },
+            "pvc": {
+              "accessModes": "ReadWriteOnce",
+              "existingClaim": null,
+              "storage": "2Gi",
               "volumeClaimTemplate": {
                 "enabled": false
               }
             },
+            "secret": {
+              "aws": {
+                "adminpassword": {
+                  "arn": "arn:aws:secretsmanager:us-east-1:000000000000:secret:admin-nxrm-password"
+                },
+                "license": {
+                  "arn": "arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrm-nexus-license"
+                },
+                "rds": {
+                  "arn": "arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrmrds-cred-nexus"
+                }
+              },
+              "azure": {
+                "keyvaultName": "yourazurekeyvault",
+                "tenantId": "azureTenantId",
+                "usePodIdentity": false,
+                "useVMManagedIdentity": true,
+                "userAssignedIdentityID": "userAssignedIdentityID"
+              },
+              "db": {
+                "host": "nxrm-db-host",
+                "hostAlias": "nxrm-db-host-alias",
+                "password": "nxrm-db-password",
+                "passwordAlias": "nxrm-db-password-alias",
+                "user": "nxrm-db-user",
+                "userAlias": "nxrm-db-user-alias"
+              },
+              "dbSecret": {
+                "enabled": false
+              },
+              "license": {
+                "licenseSecret": {
+                  "enabled": false,
+                  "file": null,
+                  "fileContentsBase64": "your_license_file_contents_in_base_64",
+                  "mountPath": "/var/nexus-repo-license"
+                },
+                "name": "nexus-repo-license.lic"
+              },
+              "nexusAdmin": {
+                "alias": "admin-nxrm-password-alias",
+                "name": "nexusAdminPassword"
+              },
+              "nexusAdminSecret": {
+                "adminPassword": "yourinitialnexuspassword",
+                "enabled": false
+              },
+              "provider": "provider",
+              "secretProviderClass": "secretProviderClass"
+            },
             "service": {
-              "docker": {
-                "enabled": false,
-                "name": "nexus-repo-docker-service",
-                "port": 9090,
-                "protocol": "TCP",
-                "targetPort": 9090,
-                "type": "NodePort"
+              "annotations": {},
+              "headless": {
+                "annotations": {},
+                "publishNotReadyAddresses": true
               },
               "nexus": {
                 "enabled": false,
-                "name": "nexus-repo-service",
                 "port": 80,
                 "protocol": "TCP",
                 "targetPort": 8081,
                 "type": "NodePort"
               }
             },
+            "serviceAccount": {
+              "annotations": null,
+              "enabled": false,
+              "name": "nexus-repository-deployment-sa"
+            },
             "statefulset": {
+              "additionalContainers": null,
+              "additionalVolumeMounts": null,
+              "additionalVolumes": null,
+              "annotations": {},
+              "auditLogContainer": {
+                "image": {
+                  "repository": "busybox",
+                  "tag": "1.33.1"
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "0.2",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "0.1",
+                    "memory": "256Mi"
+                  }
+                }
+              },
+              "clustered": true,
               "container": {
+                "additionalEnv": null,
                 "containerPort": 8081,
                 "env": {
-                  "clustered": false,
                   "install4jAddVmParams": "-Xms2703m -Xmx2703m",
-                  "jdbcUrl": null,
-                  "nexusInitialPassword": "nexusabc",
-                  "password": "nexus",
-                  "user": "nexus"
+                  "jdbcUrlParams": null,
+                  "nexusDBName": "nexus",
+                  "nexusDBPort": 5432
                 },
-                "imageName": "{{certAppSHA}}",
+                "image": {
+                  "nexusTag": "3.70.1",
+                  "repository": "sonatype/nexus3"
+                },
                 "pullPolicy": "IfNotPresent",
                 "resources": {
                   "limits": {
-                    "cpu": 4,
-                    "memory": "8Gi"
+                    "cpu": 16,
+                    "memory": "16Gi"
                   },
                   "requests": {
-                    "cpu": 4,
+                    "cpu": 8,
                     "memory": "8Gi"
                   }
                 },
                 "terminationGracePeriod": 120
               },
+              "hostAliases": [],
               "imagePullSecrets": {},
+              "initContainers": [
+                {
+                  "args": [
+                    "-c",
+                    "mkdir -p /nexus-data/etc/logback \u0026\u0026 mkdir -p /nexus-data/log/tasks \u0026\u0026 mkdir -p /nexus-data/log/audit \u0026\u0026 touch -a /nexus-data/log/tasks/allTasks.log \u0026\u0026 touch -a /nexus-data/log/audit/audit.log \u0026\u0026 touch -a /nexus-data/log/request.log \u0026\u0026 chown -R '200:200' /nexus-data"
+                  ],
+                  "command": [
+                    "/bin/sh"
+                  ],
+                  "image": "busybox:1.33.1",
+                  "name": "chown-nexusdata-owner-to-nexus-and-init-log-dir",
+                  "resources": {
+                    "limits": {
+                      "cpu": "0.2",
+                      "memory": "512Mi"
+                    },
+                    "requests": {
+                      "cpu": "0.1",
+                      "memory": "256Mi"
+                    }
+                  },
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/nexus-data",
+                      "name": "nexus-data"
+                    }
+                  ]
+                }
+              ],
               "livenessProbe": {
                 "failureThreshold": 6,
-                "initialDelaySeconds": 240,
+                "initialDelaySeconds": 0,
                 "path": "/",
-                "periodSeconds": 60
+                "periodSeconds": 60,
+                "timeoutSeconds": 1
               },
-              "name": "nexusrepo-statefulset",
+              "nodeSelector": {},
+              "podAnnotations": {},
+              "postStart": {
+                "command": null
+              },
+              "preStart": {
+                "command": null
+              },
               "readinessProbe": {
                 "failureThreshold": 6,
-                "initialDelaySeconds": 240,
+                "initialDelaySeconds": 0,
                 "path": "/",
-                "periodSeconds": 60
+                "periodSeconds": 60,
+                "timeoutSeconds": 1
               },
-              "replicaCount": 1
+              "replicaCount": 3,
+              "requestLogContainer": {
+                "image": {
+                  "repository": "busybox",
+                  "tag": "1.33.1"
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "0.2",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "0.1",
+                    "memory": "256Mi"
+                  }
+                }
+              },
+              "startupProbe": {
+                "failureThreshold": 180,
+                "initialDelaySeconds": 0,
+                "path": "/",
+                "periodSeconds": 10,
+                "timeoutSeconds": 1
+              },
+              "taskLogContainer": {
+                "image": {
+                  "repository": "busybox",
+                  "tag": "1.33.1"
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "0.2",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "0.1",
+                    "memory": "256Mi"
+                  }
+                }
+              }
+            },
+            "storageClass": {
+              "enabled": false,
+              "name": "nexus-storage",
+              "provisioner": "provisionerName",
+              "reclaimPolicy": "Retain",
+              "volumeBindingMode": "WaitForFirstConsumer"
             }
           }
         }
@@ -228,71 +414,147 @@ spec:
     ### Additional configuration
     * Once the operator has created the server instance and it is running, you can further configure Nexus Repository via the NexusRepo custom resource:
 
-    | Parameter                                                   | Description                         | Default                                 |
-    | ----------------------------------------------------------- | ----------------------------------  | ----------------------------------------|
-    | `statefulset.name`                                          |  The suffix for the statefulset's service name    | nexusrepo-statefulset     |
-    | `statefulset.replicaCount`                                  |  The desired number of Nexus Repository pods    | 3                           |
-    | `statefulset.container.imageName`                           |  The Nexus repository image registry url    | registry.connect.redhat.com/sonatype/nexus-repository-manager:<app version>-ubi-1|
-    | `statefulset.container.resources.requests.cpu`              |  The minimum cpu the Nexus repository pod can request    | 4 |
-    | `statefulset.container.resources.requests.memory`           |  The minimum memory the Nexus repository pod can request    | 8Gi|
-    | `statefulset.container.resources.limits.cpu`                |  The maximum cpu the Nexus repository pod may get.    | 4|
-    | `statefulset.container.resources.limits.memory`             |  The maximum memory the Nexus repository pod may get.  | 8Gi|
-    | `statefulset.container.containerPort`                       |  The Nexus Repository container's HTTP port  | 8081|
-    | `statefulset.container.pullPolicy`                          |  The Nexus Repository docker image pull policy  | IfNotPresent|
-    | `statefulset.container.terminationGracePeriod`              |  The time given for the pod to gracefully shut down  | 120 seconds|
-    | `statefulset.container.env.clustered`                       |  Controls whether Nexus Repository should start in clustered mode  | False|
-    | `statefulset.container.env.install4jAddVmParams`            |  Xmx and Xms settings for JVM  | -Xms2703m -Xmx2703m|
-    | `statefulset.container.env.user`                            |  The database user name | nexus (can be overridden via Kubernetes secret. See above)|
-    | `statefulset.container.env.password`                        |  The database password  | nexus (can be overridden via Kubernetes secret. See above)|
-    | `statefulset.container.env.jdbcUrl`                         |  The database url | jdbc:postgresql://your_database_server:5432/nexus (must be overridden via Kubernetes secret object which feeds into env variable variables defined in the operator.yaml . See above)|
-    | `statefulset.container.env.nexusInitialPassword`            |  The initial admin password for Nexus Repository UI. This is for first time installs only. Subsequent installs/restarts on the same node ignores this setting | nexusabc|
-    | `statefulset.livenessProbe.initialDelaySeconds`             |  The initial delay before the Nexus Repository application is pinged for a response i.e. to determine whether the application is still alive | 240|
-    | `statefulset.livenessProbe.path`                            |  The path to ping the application | |
-    | `statefulset.livenessProbe.periodSeconds`                   |  The interval for checking that the application is still alive i.e. responsive, not deadlocked etc | 60|
-    | `statefulset.livenessProbe.failureThreshold`                |  The maximum number of times the application ping can fail before the application is considered unresponsive. Kubernetes will attempt to restart the application's pod in this case | 6|
-    | `statefulset.readinessProbe.initialDelaySeconds`            |  The initial delay before the Nexus Repository application is checked whether it is ready to receive traffic | 240|
-    | `statefulset.readinessProbe.path`                           |  The path where the Nexus Repository application is checked for traffic readiness | |
-    | `statefulset.readinessProbe.periodSeconds`                  |  The interval for checking the Nexus Repository application for traffic readiness | 60|
-    | `statefulset.readinessProbe.failureThreshold`               |  The maximum number of times to check the Nexus Repository application for traffic readiness | 6|
-    | `statefulset.imagePullSecrets`                              |  The pull secret for private image registries | {}|
-    | `ingress.name`                                              |  The name of an Ingress object which listens for requests to Nexus Repository on port 80 | nexus-ingress|
-    | `ingress.enabled`                                           |  Whether or not to create the Ingress | false|
-    | `ingress.host`                                              |  Ingress host | "example.com"|
-    | `ingress.defaultRule`                                       |  Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object  | false|
-    | `ingress.additionalRules`                                   |  Additional rules to add to the ingress | null|
-    | `ingress.tls.enabled`                                       |  Whether or not TLS should be enabled for the Ingress | false|
-    | `ingress.tls.secretName`                                    | The name of a Secret object in which to store the TLS secret | tlsSecretName|
-    | `ingress.dockerSubdomain`                                   |  Whether or not to add rules for docker subdomains | false|
-    | `ingress.annotations`                                       |  Annotations for the Ingress object | null |
-    | `license.fileContentsBase64`                                |  Your Base64 encoded Nexus Repository license | your_license_file_contents_in_base_64 |
-    | `license.secretName`                                        |  The name of a secret object in which to store your Base64-encoded Nexus Repository license | nexus-repo-license|
-    | `ingress.dockerIngress.name`                                |  The name of an Ingress object which listens for requests to an existing docker repository in Nexus Repository | nexus-docker-ingress|
-    | `ingress.dockerIngress.enabled`                             |  Whether or not to create an Ingress for a docker repository | false|
-    | `ingress.dockerIngress.host`                                |  The docker Ingress's host | "example.com"|
-    | `ingress.dockerIngress.annotations`                         |  Annotations for the docker Ingress object | null |
-    | `nexusData.pvc.size`                                        |  The volume size to request for storing Nexus logs | 2Gi |
-    | `nexusData.pvc.accessMode`                                  |  The persistent volume claim access mode | ReadWriteOnce |
-    | `nexusData.storageClass.name`                               |  The name of the storage class to use for dynamically requesting that storage be provisioned when using dynamic provisioning or to randomly select a pre-created persisted volume when using the Local Storage Operator. | nexusrepo-storage |
-    | `nexusData.storageClass.reclaimPolicy`                      |  The reclaim policy for persistent volume's created by the storage class | Retain |
-    | `nexusData.storageClass.enabled`                            |  Whether or not a storage class object should be created. | false |
-    | `nexusData.storageClass.volumeBindingMode`                  |  It controls when volume binding and dynamic provisioning should occur | WaitForFirstConsumer |
-    | `nexusData.storageClass.provisioner`                        |  The name of the volume provisioner | provisioner |
-    | `nexusData.storageClass.parameters`                         |  The additional parameters for the storage class | {} |
-    | `nexusData.volumeClaimTemplate.enabled`                           |  Whether or not volume should be requested using a claim template. You should set this property to true when using dynamic volume provisioning (cloud deployments) or if you're using Local Storage Operator to automatically create persistent volumes for locally attached disks (i.e. not root disk) | false |
-    | `license.secretName | A name for the Kubernetes secret object which stores the base64 representation of your Nexus Repository license specified via `license.fileContentsBase64` is stored | nexus-repo-license |
-    | `license.fileContentsBase64 | A base64 representation of your Nexus Repository license | your_license_file_contents_in_base_64 |
-    | `service.nexus.name`                                              |  The name of a kubernetes Service Object which allows access to Nexus Repository's main HTTP port | nexus-repo-service |
-    | `service.nexus.enabled`                                           |  Whether or not to create the Service object | false|
-    | `service.nexus.type`                                              |  The type of the Kubernetes Service | "NodePort"|
-    | `service.nexus.protocol`                                       |  The protocol  | TCP |
-    | `service.nexus.port`                                   |  The port to listen for incoming requests | 80|
-    | `service.nexus.targetPort`                                   |  The port to forward requests to | 8081 |
-    | `service.docker.name`                                              |  The name of a kubernetes Service Object which allows access to a docker repository within Nexus Repository | nexus-repo-docker-service |
-    | `service.docker.enabled`                                           |  Whether or not to create a Kubernetes Service object for a given docker repository within Nexus Repository | false |
-    | `service.docker.type`                                              |  The type of the Kubernetes Service | "NodePort"|
-    | `service.docker.protocol`                                       |  The protocol  | TCP |
-    | `service.docker.port`                                   |  The port to listen for incoming requests | 9090 |
-    | `service.docker.targetPort`                                   |  The port to forward requests to | 9090 |
+    | Parameter                                                 | Description | Default |
+    |-----------------------------------------------------------|-------------|---------|
+    | aws.clusterRegion                                         | The region where the cluster will be deployed | "us-east-1" |
+    | aws.enabled                                               | Whether or not use AWS | false |
+    | aws.externaldns.awsZoneType                               |             | "private" |
+    | aws.externaldns.domainFilter                              |             | "example.com" |
+    | aws.externaldns.enabled                                   |             | false |
+    | aws.fluentbit.clusterName                                 |             | "nxrm-nexus" |
+    | aws.fluentbit.enabled                                     |             | false |
+    | aws.fluentbit.fluentBitVersion                            |             | "2.28.0" |
+    | aws.secretmanager.enabled                                 | Whether or not the AWS secret manager is enabled | false |
+    | azure.enabled                                             | Whether or not use Azure | false |
+    | azure.keyvault.enabled                                    | Whether or not the Azure key vault is enabled | false |
+    | config.data                                               |             | null |
+    | config.enabled                                            |             | false |
+    | config.mountPath                                          |             | "/sonatype-nexus-conf" |
+    | ingress.additionalRules                                   | Additional rules to add to the ingress | null |
+    | ingress.annotations                                       | Annotations for the Ingress object | null |
+    | ingress.defaultRule                                       | Whether or not to add a default rule for the Nexus Repository Ingress which forwards traffic to a Service object | false |
+    | ingress.dockersubdomain                                   | Whether or not to add rules for docker subdomains | false |
+    | ingress.enabled                                           | Whether or not to create the Ingress | false |
+    | ingress.host                                              | Ingress host | "example.com" |
+    | ingress.hostPath                                          | Ingress host path | "/" |
+    | ingress.ingressClassName                                  | Ingress class name | null |
+    | ingress.name                                              | The name of an Ingress object which listens for requests to Nexus Repository on port 80 | nexus-ingress |
+    | logStorage.combineTaskLogs                                |             | true |
+    | logStorage.tailSecondaryLogs                              |             | true |
+    | nexus.docker.enabled                                      | Whether or not use nexus repository docker image | false |
+    | nexus.docker.protocol                                     | The docker communication protocol | "TCP" |
+    | nexus.docker.type                                         | The type of kubernetes docker service | "NodePort" |
+    | nexus.extraLabels                                         |             | {} |
+    | nexus.extraSelectorLabels                                 |             | {} |
+    | nexus.properties.data                                     |             | null |
+    | nexus.properties.override                                 |             | false |
+    | nexus.securityContext.runAsUser                           |             | 200 |
+    | pvc.accessModes                                           |             | "ReadWriteOnce" |
+    | pvc.existingClaim                                         |             | null |
+    | pvc.storage                                               |             | "2Gi" |
+    | pvc.volumeClaimTemplate.enabled                           |             | false |
+    | secret.aws.adminpassword.arn                              |             | "arn:aws:secretsmanager:us-east-1:000000000000:secret:admin-nxrm-password" |
+    | secret.aws.license.arn                                    | The AWS license ARN secret key | "arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrm-nexus-license" |
+    | secret.aws.rds.arn                                        | The AWS RDS ARN secret key | "arn:aws:secretsmanager:us-east-1:000000000000:secret:nxrmrds-cred-nexus" |
+    | secret.azure.keyvaultName                                 |             | "yourazurekeyvault" |
+    | secret.azure.tenantId                                     |             | "azureTenantId" |
+    | secret.azure.usePodIdentity                               |             | false |
+    | secret.azure.useVMManagedIdentity                         |             | true |
+    | secret.azure.userAssignedIdentityID                       |             | "userAssignedIdentityID" |
+    | secret.db.host                                            | The DB host secret key | "nxrm-db-host" |
+    | secret.db.hostAlias                                       | The DB host alias secret key | "nxrm-db-host-alias" |
+    | secret.db.password                                        | The DB password secret key | "nxrm-db-password"        |
+    | secret.db.passwordAlias                                   | The DB password alias secret key | "nxrm-db-password-alias" |
+    | secret.db.user                                            | The DB user secret key | "nxrm-db-user" |
+    | secret.db.userAlias                                       | The DB user alias secret key | "nxrm-db-user-alias" |
+    | secret.dbSecret.enabled                                   |             | false |
+    | secret.license.licenseSecret.enabled                      |             | false |
+    | secret.license.licenseSecret.file                         |             | null |
+    | secret.license.licenseSecret.fileContentsBase64           | A base64 representation of your Nexus Repository license | "your_license_file_contents_in_base_64" |
+    | secret.license.licenseSecret.mountPath                    |             | "/var/nexus-repo-license" |
+    | secret.license.name                                       |             | "nexus-repo-license.lic" |
+    | secret.nexusAdmin.alias                                   |             | "admin-nxrm-password-alias" |
+    | secret.nexusAdmin.name                                    |             | "nexusAdminPassword" |
+    | secret.nexusAdminSecret.adminPassword                     |             | "yourinitialnexuspassword" |
+    | secret.nexusAdminSecret.enabled                           |             | false |
+    | secret.provider                                           |             | "provider" |
+    | secret.secretProviderClass                                |             | "secretProviderClass" |
+    | service.annotations                                       |             | {} |
+    | service.headless.annotations                              |             | {} |
+    | service.headless.publishNotReadyAddresses                 |             | true |
+    | service.nexus.enabled                                     | Whether or not to create the Service object | false |
+    | service.nexus.port                                        | The port to listen for incoming requests | 80 |
+    | service.nexus.protocol                                    | The protocol | "TCP" |
+    | service.nexus.targetPort                                  | The port to forward requests to | 8081 |
+    | service.nexus.type                                        | The type of the Kubernetes Service | "NodePort" |
+    | serviceAccount.annotations                                |             | null |
+    | serviceAccount.enabled                                    |             | false |
+    | serviceAccount.name                                       |             | "nexus-repository-deployment-sa" |
+    | statefulset.additionalContainers                          |             | null |
+    | statefulset.additionalVolumeMounts                        |             | null |
+    | statefulset.additionalVolumes                             |             | null |
+    | statefulset.annotations                                   |             | {} |
+    | statefulset.auditLogContainer.image.repository            |             | "busybox" |
+    | statefulset.auditLogContainer.image.tag                   |             | "1.33.1" |
+    | statefulset.auditLogContainer.resources.limits.cpu        |             | "0.2" |
+    | statefulset.auditLogContainer.resources.limits.memory     |             | "512Mi" |
+    | statefulset.auditLogContainer.resources.requests.cpu      |             | "0.1" |
+    | statefulset.auditLogContainer.resources.requests.memory   |             | "256Mi" |
+    | statefulset.clustered                                     |             | true |
+    | statefulset.container.additionalEnv                       |             | null |
+    | statefulset.container.containerPort                       | The Nexus Repository container's HTTP port | 8081 |
+    | statefulset.container.env.install4jAddVmParams            | Xmx and Xms settings for JVM | "-Xms2703m -Xmx2703m" |
+    | statefulset.container.env.jdbcUrlParams                   |             | null |
+    | statefulset.container.env.nexusDBName                     |             | "nexus" |
+    | statefulset.container.env.nexusDBPort                     |             | 5432 |
+    | statefulset.container.image.nexusTag                      |             | "3.68.1" |
+    | statefulset.container.image.repository                    |             | "sonatype/nexus3" |
+    | statefulset.container.pullPolicy                          | The Nexus Repository docker image pull policy | "IfNotPresent" |
+    | statefulset.container.resources.limits.cpu                | The maximum cpu the Nexus repository pod may get | 16 |
+    | statefulset.container.resources.limits.memory             | The maximum memory the Nexus repository pod may get | "16Gi" |
+    | statefulset.container.resources.requests.cpu              | The minimum cpu the Nexus repository pod can request | 8 |
+    | statefulset.container.resources.requests.memory           | The minimum memory the Nexus repository pod can request | "8Gi" |
+    | statefulset.container.terminationGracePeriod              | The time given for the pod to gracefully shut down (in seconds) | 120 |
+    | statefulset.hostAliases                                   |             | [] |
+    | statefulset.imagePullSecrets                              | The pull secret for private image registries | {} |
+    | statefulset.initContainers                                |             | [] |
+    | statefulset.livenessProbe.failureThreshold                | The maximum number of times the application ping can fail before the application is considered unresponsive. Kubernetes will attempt to restart the application's pod in this case | 6 |
+    | statefulset.livenessProbe.initialDelaySeconds             | The initial delay before the Nexus Repository application is pinged for a response i.e. to determine whether the application is still alive | 240 |
+    | statefulset.livenessProbe.path                            | The path to ping the application | "/" |
+    | statefulset.livenessProbe.periodSeconds                   | The interval for checking that the application is still alive i.e. responsive, not deadlocked etc | 60 |
+    | statefulset.livenessProbe.timeoutSeconds                  |             | 1 |
+    | statefulset.nodeSelector                                  |             | {} |
+    | statefulset.podAnnotations                                |             | {} |
+    | statefulset.postStart.command                             |             | null |
+    | statefulset.preStart.command                              |             | null |
+    | statefulset.readinessProbe.failureThreshold               | The maximum number of times to check the Nexus Repository application for traffic readiness | 6 |
+    | statefulset.readinessProbe.initialDelaySeconds            | The initial delay before the Nexus Repository application is checked whether it is ready to receive traffic | 240 |
+    | statefulset.readinessProbe.path                           | The path where the Nexus Repository application is checked for traffic readiness | "/" |
+    | statefulset.readinessProbe.periodSeconds                  | The interval for checking the Nexus Repository application for traffic readiness | 60 |
+    | statefulset.readinessProbe.timeoutSeconds                 |             | 1 |
+    | statefulset.replicaCount                                  | The desired number of Nexus Repository pods | 3 |
+    | statefulset.requestLogContainer.image.repository          |             | "busybox" |
+    | statefulset.requestLogContainer.image.tag                 |             | "1.33.1" |
+    | statefulset.requestLogContainer.resources.limits.cpu      |             | "0.2" |
+    | statefulset.requestLogContainer.resources.limits.memory   |             | "512Mi" |
+    | statefulset.requestLogContainer.resources.requests.cpu    |             | "0.1" |
+    | statefulset.requestLogContainer.resources.requests.memory |             | "256Mi" |
+    | statefulset.startupProbe.failureThreshold                 |             | 180 |
+    | statefulset.startupProbe.initialDelaySeconds              |             | 0 |
+    | statefulset.startupProbe.path                             |             | "/" |
+    | statefulset.startupProbe.periodSeconds                    |             | 10 |
+    | statefulset.startupProbe.timeoutSeconds                   |             | 1 |
+    | statefulset.taskLogContainer.image.repository             |             | "busybox" |
+    | statefulset.taskLogContainer.image.tag                    |             | "1.33.1" |
+    | statefulset.taskLogContainer.resources.limits.cpu         |             | "0.2" |
+    | statefulset.taskLogContainer.resources.limits.memory      |             | "512Mi" |
+    | statefulset.taskLogContainer.resources.requests.cpu       |             | "0.1" |
+    | statefulset.taskLogContainer.resources.requests.memory    |             | "256Mi" |
+    | storageClass.enabled                                      |             | false |
+    | storageClass.name                                         |             | "nexus-storage" |
+    | storageClass.provisioner                                  |             | "provisionerName" |
+    | storageClass.reclaimPolicy                                |             | "Retain" |
+    | storageClass.volumeBindingMode                            |             | "WaitForFirstConsumer" |
 
   displayName: Nexus Repository HA Operator
   icon:

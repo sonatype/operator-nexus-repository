@@ -4,3 +4,4 @@ bundle
 artifacts
 *.log
 .DS_STORE
+*.iml
