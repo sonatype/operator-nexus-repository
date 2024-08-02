@@ -38,7 +38,7 @@ metadata:
             "secret": {
               "nexusSecret": {
                 "enabled" : false,
-                "name": "nexusSecret.json",
+                "name": "nexus_secret.json",
                 "nexusSecretsKeyId": "super_secret_key_id",
                 "secretKeyfileContentsBase64": "secretKeyfileContentsBase64",
                 "mountPath": "/var/nexus-repo-secrets"

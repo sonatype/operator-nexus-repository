@@ -22,7 +22,7 @@ tests:
           path: spec.template.spec.containers[0].env[4]
           value:
             name: NEXUS_SECRETS_KEY_FILE
-            value: /var/nexus-repo-secrets/nexusSecret.json
+            value: /var/nexus-repo-secrets/nexus_secret.json
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[1]
           value:
@@ -34,7 +34,7 @@ tests:
           value:
             name: nexus-secret-volume
             secret:
-              secretName: nexusSecret.json
+              secretName: nexus_secret.json
   - it: should create nexus pod with dynamic nexusdata volume
     set:
       statefulset:
