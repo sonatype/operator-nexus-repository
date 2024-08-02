@@ -28,7 +28,7 @@ spec:
   secret:
     nexusSecret:
       enabled: false
-      name: nexus_secret.json
+      name: nexus-secret.json
       nexusSecretsKeyId: "super_secret_key_id"
       secretKeyfileContentsBase64: "secretKeyfileContentsBase64" # secrets key file contents in base 64
       mountPath: /var/nexus-repo-secrets
