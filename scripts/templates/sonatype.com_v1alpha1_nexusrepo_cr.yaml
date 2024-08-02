@@ -25,6 +25,13 @@ spec:
   license:
     fileContentsBase64: your_license_file_contents_in_base_64
     secretName: nexus-repo-license
+  secret:
+    nexusSecret:
+      enabled: false
+      name: nexusSecret.json
+      nexusSecretsKeyId: "super_secret_key_id"
+      secretKeyfileContentsBase64: "secretKeyfileContentsBase64" # secrets key file contents in base 64
+      mountPath: /var/nexus-repo-secrets
   nexusData:
     volumeClaimTemplate:
       enabled: false
@@ -63,6 +70,7 @@ spec:
         nexusInitialPassword: nexusabc
         password: nexus
         user: nexus
+        zeroDowntimeEnabled: false
       imageName: {{certAppSHA}}
       pullPolicy: IfNotPresent
       resources:

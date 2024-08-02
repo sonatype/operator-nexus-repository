@@ -78,6 +78,15 @@ spec:
             - name: LICENSE_FILE
               value: /var/nexus-repo-license/nexus-repo-license.lic
             {{- end }}
+            - name: NEXUS_ZERO_DOWNTIME_ENABLED
+          {{- $zeroDowntimeEnabled := default false .Values.statefulset.container.env.zeroDowntimeEnabled }}
+              value: "{{ toString $zeroDowntimeEnabled }}"
+          {{- if .Values.secret.nexusSecret.enabled }}
+            - name: NEXUS_SECRETS_KEY_ID
+              value: {{ .Values.secret.nexusSecret.nexusSecretsKeyId | quote }}
+            - name: NEXUS_SECRETS_KEY_FILE
+              value: {{ .Values.secret.nexusSecret.mountPath }}/{{ .Values.secret.nexusSecret.name }}
+          {{ end }}
             - name: INSTALL4J_ADD_VM_PARAMS
             {{- if .Values.statefulset.container.env.clustered }}
               value: "{{ .Values.statefulset.container.env.install4jAddVmParams }} \
@@ -96,6 +105,11 @@ spec:
           volumeMounts:
             - name: nexusdata
               mountPath: /nexus-data
+          {{- if .Values.secret.nexusSecret.enabled }}
+            - name: nexus-secret-volume
+              mountPath: {{ .Values.secret.nexusSecret.mountPath }}
+              readOnly: true
+          {{ end }}
   {{- if and .Values.statefulset.container.env.jdbcUrl ( contains "postgresql" .Values.statefulset.container.env.jdbcUrl) }}
             - name: license-volume
               mountPath: /var/nexus-repo-license
@@ -107,6 +121,11 @@ spec:
           secret:
             secretName: {{ .Chart.Name }}-{{ .Chart.Version}}-{{ .Release.Name }}-{{ .Values.license.secretName }}
   {{- end }}
+      {{- if .Values.secret.nexusSecret.enabled }}
+        - name: nexus-secret-volume
+          secret:
+            secretName: {{ .Values.secret.nexusSecret.name }}
+      {{ end }}
   {{- if  (not .Values.nexusData.volumeClaimTemplate.enabled) }}
         - name: nexusdata
           emptyDir:
