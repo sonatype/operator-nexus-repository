@@ -35,6 +35,15 @@ metadata:
               "fileContentsBase64": "your_license_file_contents_in_base_64",
               "secretName": "nexus-repo-license"
             },
+            "secret": {
+              "nexusSecret": {
+                "enabled" : false,
+                "name": "nexus-secret.json",
+                "nexusSecretsKeyId": "super_secret_key_id",
+                "secretKeyfileContentsBase64": "secretKeyfileContentsBase64",
+                "mountPath": "/var/nexus-repo-secrets"
+              }
+            },      
             "nexusData": {
               "pvc": {
                 "accessMode": "ReadWriteOnce",
@@ -79,7 +88,8 @@ metadata:
                   "jdbcUrl": null,
                   "nexusInitialPassword": "nexusabc",
                   "password": "nexus",
-                  "user": "nexus"
+                  "user": "nexus",
+                  "zeroDowntimeEnabled": false
                 },
                 "imageName": "{{certAppSHA}}",
                 "pullPolicy": "IfNotPresent",
