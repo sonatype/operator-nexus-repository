@@ -16,11 +16,6 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].env[3]
           value:
-            name: NEXUS_SECRETS_KEY_ID
-            value: "super_secret_key_id"
-      - equal:
-          path: spec.template.spec.containers[0].env[4]
-          value:
             name: NEXUS_SECRETS_KEY_FILE
             value: /var/nexus-repo-secrets/nexus-secret.json
       - equal:
