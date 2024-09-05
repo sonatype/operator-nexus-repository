@@ -4,7 +4,7 @@ statefulset:
   name: nexusrepo-statefulset
   replicaCount: 1
   container:
-    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.71.0-ubi-1
+    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.72.0-ubi-1
     resources:
       # See help documentation, these are minimum system requirements
       requests:
