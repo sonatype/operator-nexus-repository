@@ -6,6 +6,30 @@ release:
 chart:
   version: "latest"
 tests:
+  - it: should mount nexus secret when secret.nexusSecret.enabled
+    template: statefulset.yaml
+    set:
+      secret:
+        nexusSecret:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[3]
+          value:
+            name: NEXUS_SECRETS_KEY_FILE
+            value: /var/nexus-repo-secrets/nexus-secret.json
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1]
+          value:
+            name: nexus-secret-volume
+            mountPath: /var/nexus-repo-secrets
+            readOnly: true
+      - equal:
+          path: spec.template.spec.volumes[0]
+          value:
+            name: nexus-secret-volume
+            secret:
+              secretName: nexus-secret.json
   - it: should create nexus pod with dynamic nexusdata volume
     set:
       statefulset:
@@ -130,6 +154,8 @@ tests:
               value: "nexus"
             - name: LICENSE_FILE
               value: /var/nexus-repo-license/nexus-repo-license.lic
+            - name: NEXUS_ZERO_DOWNTIME_ENABLED
+              value: "false"
             - name: INSTALL4J_ADD_VM_PARAMS
               value: "-Xms2703m -Xmx2703m \
           -Dnexus.licenseFile=${LICENSE_FILE} \

@@ -23,6 +23,7 @@ statefulset:
       password: nexus
       jdbcUrl: null
       nexusInitialPassword: nexusabc
+      zeroDowntimeEnabled: false
   livenessProbe:
     failureThreshold: 6
     initialDelaySeconds: 240
@@ -66,6 +67,13 @@ nexusData:
 license:
   secretName: nexus-repo-license
   fileContentsBase64: your_license_file_contents_in_base_64
+secret:
+  nexusSecret:
+    enabled: false
+    name: nexus-secret.json
+    nexusSecretsKeyId: "super_secret_key_id"
+    secretKeyfileContentsBase64: "secretKeyfileContentsBase64" # secrets key file contents in base 64
+    mountPath: /var/nexus-repo-secrets
 
 service:  #Nexus Repo NodePort Service
   nexus:
