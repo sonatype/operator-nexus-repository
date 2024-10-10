@@ -4,7 +4,7 @@ statefulset:
   name: nexusrepo-statefulset
   replicaCount: 1
   container:
-    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.72.0-ubi-1
+    imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager:3.73.0-ubi-1
     resources:
       # See help documentation, these are minimum system requirements
       requests:
@@ -74,7 +74,6 @@ secret:
     nexusSecretsKeyId: "super_secret_key_id"
     secretKeyfileContentsBase64: "secretKeyfileContentsBase64" # secrets key file contents in base 64
     mountPath: /var/nexus-repo-secrets
-
 service:  #Nexus Repo NodePort Service
   nexus:
     name: nexus-repo-service
