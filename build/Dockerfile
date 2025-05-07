@@ -3,6 +3,7 @@ FROM quay.io/operator-framework/helm-operator@sha256:ecb23393140d2553d97ba9de4d7
 
 # Required OpenShift Labels
 LABEL name="Nexus Repository HA Operator" \
+      maintainer = "Sonatype" \
       vendor="Sonatype" \
       version="3.80.0" \
       release="1" \
