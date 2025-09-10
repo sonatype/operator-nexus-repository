@@ -7,7 +7,9 @@ LABEL name="Nexus Repository HA Operator" \
       version="3.84.0" \
       release="1" \
       summary="The Nexus Repository with universal support for popular component formats." \
-      description="The Nexus Repository with universal support for popular component formats."
+      description="The Nexus Repository with universal support for popular component formats." \
+      maintainer="Sonatype for Red Hat OpenShift"
+
 
 USER root
 
