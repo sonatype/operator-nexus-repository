@@ -48,7 +48,7 @@ tests:
           of: StatefulSet
       - equal:
           path: metadata.name
-          value: "nxrm-ha-latest-nexusrepo-statefulset"
+          value: "nxrm-ha-nexusrepo-statefulset"
 
       - equal:
           path: metadata.labels.app
@@ -60,7 +60,7 @@ tests:
 
       - equal:
           path: spec.serviceName
-          value: "nxrm-ha-latest-test-release-nexusrepo-statefulset"
+          value: "nxrm-ha-test-release-nexusrepo-statefulset"
 
       - equal:
           path: spec.selector.matchLabels.app
