@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Chart.Name }}-{{ .Chart.Version  | replace "." "-"}}-{{ .Values.statefulset.name }}
+  name: {{ .Chart.Name }}-{{ .Values.statefulset.name }}
   labels:
     app: nxrm
 spec:
   replicas: {{.Values.statefulset.replicaCount}}
-  serviceName: "{{ .Chart.Name }}-{{ .Chart.Version  | replace "." "-"}}-{{ .Release.Name }}-{{ .Values.statefulset.name }}"
+  serviceName: "{{ .Chart.Name }}-{{ .Release.Name }}-{{ .Values.statefulset.name }}"
   selector:
     matchLabels:
       app: nxrm

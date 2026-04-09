@@ -71,7 +71,7 @@ spec:
         password: nexus
         user: nexus
         zeroDowntimeEnabled: false
-      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:ee153ccfa1132e92a5467493903ebd4a6e64c4cc7bbca59617ff1c9c2b917a0a
+      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:fbad488ff2e368845473a11b4955992fe826a94811da3abf5cc3c6a33ff3974f
       pullPolicy: IfNotPresent
       resources:
         limits:

@@ -86,3 +86,22 @@ tests:
                         name: "nxrm-ha-nexus-repo-docker-service"
                         port:
                           number: 9090
+
+  - it: should create ingress with TLS hosts configured
+    set:
+      ingress:
+        enabled: "true"
+        host: nexus.example.com
+        defaultRule: "true"
+        tls:
+          enabled: "true"
+          secretName: my-tls-secret
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.tls
+          value:
+            - hosts:
+                - nexus.example.com
+              secretName: my-tls-secret
