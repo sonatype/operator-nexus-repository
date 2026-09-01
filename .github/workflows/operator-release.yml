@@ -1,0 +1,200 @@
+name: Operator Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      operator_version:
+        description: 'New operator version (e.g. 3.91.0-1)'
+        required: true
+        type: string
+      cert_app_version:
+        description: 'Certified app image tag at RH (e.g. 3.91.0-ubi-1)'
+        required: true
+        type: string
+      previous_version:
+        description: 'Previous operator version for OLM replaces field (e.g. 3.90.3-1)'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    name: Update version files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Shellcheck release scripts
+        run: |
+          shellcheck scripts/get-rh-image-sha.sh \
+                     scripts/new_version.sh \
+                     scripts/copy-to-certified.sh
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version files
+        run: |
+          ./scripts/new_version.sh image \
+            "${{ inputs.operator_version }}" \
+            "${{ inputs.cert_app_version }}"
+
+      - name: Commit version files
+        run: |
+          git add helm-charts/nxrm-ha/Chart.yaml \
+                  helm-charts/nxrm-ha/values.yaml \
+                  build/Dockerfile
+          git commit -m "release ${{ inputs.operator_version }}: update image version files"
+          git push
+
+      - name: Print next steps summary
+        run: |
+          {
+            echo "## Version files updated — ${{ inputs.operator_version }}"
+            echo ""
+            echo "### Trigger both Jenkins builds now, then Approve the gate below"
+            echo ""
+            echo "**1. Update docker-nexus3 Dockerfile** with NXRM version \`${{ inputs.cert_app_version }}\`, then trigger:"
+            echo "   https://jenkins.ci.sonatype.dev/job/integrations/job/cloud/job/Red%20Hat/job/docker-nexus-repository-red-hat-release/"
+            echo ""
+            echo "**2. Trigger operator image build** (uses the Dockerfile just committed) — specify version \`${{ inputs.operator_version }}\`:"
+            echo "   https://jenkins.ci.sonatype.dev/job/nxrm/job/Red%20Hat/job/operator-nexus-repository-release/"
+            echo ""
+            echo "**3.** Wait ~30 min for both builds and Red Hat publishing to complete."
+            echo ""
+            echo "**4.** Return here → click **Review pending deployments** → **Approve**."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  await-builds:
+    name: Await Jenkins builds (approve when both images published at RH)
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: operator-release-approval
+    steps:
+      - name: Builds approved
+        run: echo "Jenkins builds confirmed. Proceeding with bundle generation."
+
+  bundle-and-pr:
+    name: Generate bundle and open certified-operators PR
+    needs: await-builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Retrieve operator image SHA
+        id: operator_sha
+        env:
+          RH_API_TOKEN: ${{ secrets.RH_API_TOKEN }}
+        run: |
+          ref=$(./scripts/get-rh-image-sha.sh \
+            "64d3814688a42145092bb0ff" \
+            "${{ inputs.operator_version }}" \
+            "registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified")
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Retrieve app image SHA
+        id: app_sha
+        env:
+          RH_API_TOKEN: ${{ secrets.RH_API_TOKEN }}
+        run: |
+          ref=$(./scripts/get-rh-image-sha.sh \
+            "5e61d90a38776799eb517bd2" \
+            "${{ inputs.cert_app_version }}" \
+            "registry.connect.redhat.com/sonatype/nexus-repository-manager")
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Generate bundle files
+        run: |
+          ./scripts/new_version.sh bundle \
+            "${{ inputs.previous_version }}" \
+            "${{ inputs.operator_version }}" \
+            "${{ steps.operator_sha.outputs.ref }}" \
+            "${{ steps.app_sha.outputs.ref }}"
+
+      - name: Commit bundle files
+        run: |
+          git add deploy/
+          if git diff --cached --quiet; then
+            echo "No bundle changes detected — skipping commit"
+          else
+            git commit -m "release ${{ inputs.operator_version }}: add OLM bundle"
+            git push
+          fi
+
+      - name: Sync certified-operators fork with RH upstream
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          gh repo sync sonatype/certified-operators \
+            --source redhat-openshift-ecosystem/certified-operators
+
+      - name: Clone certified-operators fork
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          git clone \
+            "https://x-access-token:${RELEASE_PAT}@github.com/sonatype/certified-operators.git" \
+            "${{ github.workspace }}/../certified-operators"
+          cd "${{ github.workspace }}/../certified-operators"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Copy bundle to certified-operators
+        run: ./scripts/copy-to-certified.sh "${{ inputs.operator_version }}"
+
+      - name: Commit and push to certified-operators fork
+        run: |
+          cd "${{ github.workspace }}/../certified-operators"
+          git add "operators/nexus-repository-ha-operator-certified/${{ inputs.operator_version }}/"
+          git commit -m "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})"
+          git push origin main
+
+      - name: Open PR to Red Hat upstream
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          existing=$(gh pr list \
+            --repo redhat-openshift-ecosystem/certified-operators \
+            --head "sonatype:main" \
+            --json url \
+            --jq '.[0].url // empty' 2>/dev/null || true)
+          if [ -n "$existing" ]; then
+            echo "PR already exists: $existing — skipping creation"
+            echo "pr_url=$existing" >> "$GITHUB_OUTPUT"
+          else
+            pr_url=$(gh pr create \
+              --repo redhat-openshift-ecosystem/certified-operators \
+              --title "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})" \
+              --body "Automated release of nexus-repository-ha-operator-certified ${{ inputs.operator_version }}" \
+              --head "sonatype:main" \
+              --base main)
+            echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Job summary
+        run: |
+          {
+            echo "## Release ${{ inputs.operator_version }} — bundle complete"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Operator image | \`${{ steps.operator_sha.outputs.ref }}\` |"
+            echo "| App image | \`${{ steps.app_sha.outputs.ref }}\` |"
+            echo "| Certified-operators PR | ${{ steps.pr.outputs.pr_url }} |"
+            echo ""
+            echo "### Remaining manual steps"
+            echo "1. Monitor the PR above — Red Hat CI validates and auto-merges on pass"
+            echo "2. \`git tag ${{ inputs.operator_version }} && git push --tags\`"
+            echo "3. Set Jira fix version: https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/"
+          } >> "$GITHUB_STEP_SUMMARY"
