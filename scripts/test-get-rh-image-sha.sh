@@ -18,7 +18,7 @@ run_test() {
 # Creates a temporary directory containing a mock `curl` binary that prints $1 and exits 0
 mock_curl() {
   response="$1"
-  mock_dir=$(mktemp -d)
+  mock_dir=$(mktemp -d "${TMPDIR:-/tmp}/mock-XXXXXX")
   printf '#!/bin/sh\nprintf '"'"'%%s'"'"' '"'"'%s'"'"'\n' "$response" > "$mock_dir/curl"
   chmod +x "$mock_dir/curl"
   printf '%s' "$mock_dir"

@@ -20,7 +20,7 @@ GitHub repo → Settings → Secrets and variables → Actions → **New reposit
 | Name | Value |
 |---|---|
 | `RH_API_TOKEN` | Red Hat connect API Bearer token. Find it at connect.redhat.com → your account. This is the same token the Jenkins jobs use. |
-| `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). |
+| `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). A fine-grained PAT scoped to `sonatype/certified-operators` (contents + pull requests: read/write) is a more secure alternative if supported by the RH connect project requirements. |
 
 ### 3. Verify the PAT has write access to the fork
 
@@ -63,7 +63,7 @@ Jenkins is not reachable from GitHub-hosted runners, so these two builds remain 
 
 In the workflow run, click **Review pending deployments** → **Approve**.
 
-The `bundle-and-pr` job runs automatically:
+The `bundle-and-pr` job runs automatically (120-minute job timeout):
 - Polls Red Hat API for both image SHAs (retries every 60s, up to 90 min)
 - Generates OLM bundle manifests and commits them
 - Syncs the `sonatype/certified-operators` fork, copies the bundle, opens a PR to RH upstream
@@ -97,7 +97,7 @@ Common causes and fixes:
 | SHA not found within 90 min | Confirm the image is live at connect.redhat.com, then re-run |
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes; `gh repo sync` in `bundle-and-pr` mitigates this, but if it still fails, manually sync the fork and re-run |
-| PR already exists | The job detects this and skips creation — check the existing PR |
+| PR already exists (open from a previous release) | The job fails with an error message. Merge or close the existing PR, then re-run only `bundle-and-pr`. |
 
 ---
 

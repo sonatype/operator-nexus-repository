@@ -27,9 +27,9 @@ jobs:
 
       - name: Shellcheck release scripts
         run: |
-          shellcheck scripts/get-rh-image-sha.sh \
-                     scripts/new_version.sh \
-                     scripts/copy-to-certified.sh
+          shellcheck --severity=error scripts/get-rh-image-sha.sh \
+                                      scripts/new_version.sh \
+                                      scripts/copy-to-certified.sh
 
       - name: Configure git
         run: |
@@ -48,6 +48,7 @@ jobs:
                   helm-charts/nxrm-ha/values.yaml \
                   build/Dockerfile
           git commit -m "release ${{ inputs.operator_version }}: update image version files"
+          git pull --rebase origin main
           git push
 
       - name: Print next steps summary
@@ -81,6 +82,7 @@ jobs:
     name: Generate bundle and open certified-operators PR
     needs: await-builds
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
@@ -128,6 +130,7 @@ jobs:
             echo "No bundle changes detected — skipping commit"
           else
             git commit -m "release ${{ inputs.operator_version }}: add OLM bundle"
+            git pull --rebase origin main
             git push
           fi
 
@@ -156,8 +159,12 @@ jobs:
         run: |
           cd "${{ github.workspace }}/../certified-operators"
           git add "operators/nexus-repository-ha-operator-certified/${{ inputs.operator_version }}/"
-          git commit -m "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})"
-          git push origin main
+          if git diff --cached --quiet; then
+            echo "Bundle already committed to certified-operators fork — skipping commit"
+          else
+            git commit -m "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})"
+            git push origin main
+          fi
 
       - name: Open PR to Red Hat upstream
         id: pr
@@ -170,24 +177,24 @@ jobs:
             --json url \
             --jq '.[0].url // empty' 2>/dev/null || true)
           if [ -n "$existing" ]; then
-            echo "PR already exists: $existing — skipping creation"
-            echo "pr_url=$existing" >> "$GITHUB_OUTPUT"
-          else
-            pr_url=$(gh pr create \
-              --repo redhat-openshift-ecosystem/certified-operators \
-              --title "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})" \
-              --body "Automated release of nexus-repository-ha-operator-certified ${{ inputs.operator_version }}" \
-              --head "sonatype:main" \
-              --base main)
-            echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+            echo "ERROR: A certified-operators PR from sonatype:main is already open: $existing" >&2
+            echo "Merge or close that PR before running a new release, then re-run only bundle-and-pr." >&2
+            exit 1
           fi
+          pr_url=$(gh pr create \
+            --repo redhat-openshift-ecosystem/certified-operators \
+            --title "operator nexus-repository-ha-operator-certified (${{ inputs.operator_version }})" \
+            --body "Automated release of nexus-repository-ha-operator-certified ${{ inputs.operator_version }}" \
+            --head "sonatype:main" \
+            --base main)
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
 
       - name: Job summary
         run: |
           {
             echo "## Release ${{ inputs.operator_version }} — bundle complete"
             echo ""
-            echo "| | |"
+            echo "| Item | Value |"
             echo "|---|---|"
             echo "| Operator image | \`${{ steps.operator_sha.outputs.ref }}\` |"
             echo "| App image | \`${{ steps.app_sha.outputs.ref }}\` |"

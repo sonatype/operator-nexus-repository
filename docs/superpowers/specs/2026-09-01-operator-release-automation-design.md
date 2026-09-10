@@ -246,7 +246,7 @@ Create an environment named `operator-release-approval` in the repo settings wit
 | SHA not found within 90 min | Job fails with message: "Image not yet published at RH. Re-run the `bundle-and-pr` job after confirming the image is live." |
 | `new_version.sh bundle` fails | Job fails; the `prepare` commit and `await-builds` approval are already done; re-run only `bundle-and-pr` with the same inputs |
 | certified-operators fork push fails | Likely a merge conflict from RH upstream changes; `gh repo sync` is run first to mitigate; if it still fails, a clear error is surfaced |
-| PR title conflict (duplicate open PR) | `gh pr create` will error if a PR for this branch already exists; the job should check first and skip PR creation if one is already open |
+| PR already open from a previous release | The job checks for an open PR from `sonatype:main` and **fails loudly** with instructions to close/merge it before re-running. This prevents a new release's bundle from being silently appended to the old PR under the wrong title. |
 
 ---
 
