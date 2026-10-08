@@ -50,8 +50,8 @@ The job summary shows both Jenkins job links.
 
 Jenkins is not reachable from GitHub-hosted runners, so these two builds remain manual:
 
-1. **Update `docker-nexus3` Dockerfile** — edit `Dockerfile.rh.ubi.java17` lines 20–21 and
-   39–41 to reference the new NXRM version, then trigger:
+1. **Update `docker-nexus3` Dockerfile** — edit `Dockerfile.rh.ubi.java21` lines 23–24 and
+   42–44 to reference the new NXRM version, then trigger:
    [docker-nexus-repository-red-hat-release](https://jenkins.ci.sonatype.dev/job/integrations/job/cloud/job/Red%20Hat/job/docker-nexus-repository-red-hat-release/)
 
 2. **Build the operator image** — trigger with version `<operator_version>`:
