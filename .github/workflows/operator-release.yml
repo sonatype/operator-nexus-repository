@@ -11,15 +11,13 @@ on:
         description: 'Certified app image tag at RH (e.g. 3.91.0-ubi-1)'
         required: true
         type: string
-      previous_version:
-        description: 'Previous operator version for OLM replaces field (e.g. 3.90.3-1)'
-        required: true
-        type: string
 
 jobs:
   prepare:
     name: Update version files
     runs-on: ubuntu-latest
+    outputs:
+      previous_version: ${{ steps.detect_previous.outputs.previous_version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,6 +33,23 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Detect previous operator version
+        id: detect_previous
+        run: |
+          catalog_dir="deploy/olm-catalog/nexus-repository-ha-operator-certified"
+          previous_version=$(find "$catalog_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+            | sort -V | tail -1)
+          if [ -z "$previous_version" ]; then
+            echo "ERROR: no existing version directories found under $catalog_dir" >&2
+            exit 1
+          fi
+          if [ "$previous_version" = "${{ inputs.operator_version }}" ]; then
+            echo "ERROR: detected previous_version ($previous_version) equals operator_version — already released?" >&2
+            exit 1
+          fi
+          echo "Detected previous_version=$previous_version"
+          echo "previous_version=$previous_version" >> "$GITHUB_OUTPUT"
 
       - name: Update version files
         run: |
@@ -55,6 +70,9 @@ jobs:
         run: |
           {
             echo "## Version files updated — ${{ inputs.operator_version }}"
+            echo ""
+            echo "Detected previous version (used for OLM \`replaces\`): \`${{ steps.detect_previous.outputs.previous_version }}\`"
+            echo "If that's wrong, cancel this run before approving the gate below."
             echo ""
             echo "### Trigger both Jenkins builds now, then Approve the gate below"
             echo ""
@@ -80,7 +98,7 @@ jobs:
 
   bundle-and-pr:
     name: Generate bundle and open certified-operators PR
-    needs: await-builds
+    needs: [prepare, await-builds]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -92,6 +110,19 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify previous version is still latest
+        run: |
+          catalog_dir="deploy/olm-catalog/nexus-repository-ha-operator-certified"
+          current_latest=$(find "$catalog_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+            | sort -V | tail -1)
+          expected="${{ needs.prepare.outputs.previous_version }}"
+          if [ "$current_latest" != "$expected" ]; then
+            echo "ERROR: previous_version detected in 'prepare' ($expected) no longer matches" >&2
+            echo "the latest version on main ($current_latest) — another release likely landed" >&2
+            echo "in the meantime. Re-run the workflow from the start." >&2
+            exit 1
+          fi
 
       - name: Retrieve operator image SHA
         id: operator_sha
@@ -118,7 +149,7 @@ jobs:
       - name: Generate bundle files
         run: |
           ./scripts/new_version.sh bundle \
-            "${{ inputs.previous_version }}" \
+            "${{ needs.prepare.outputs.previous_version }}" \
             "${{ inputs.operator_version }}" \
             "${{ steps.operator_sha.outputs.ref }}" \
             "${{ steps.app_sha.outputs.ref }}"

@@ -41,10 +41,13 @@ GitHub Actions → **Operator Release** → **Run workflow**
 |---|---|---|
 | `operator_version` | `3.91.0-1` | New version you are releasing |
 | `cert_app_version` | `3.91.0-ubi-1` | The UBI image tag that will appear at RH after the build |
-| `previous_version` | `3.90.3-1` | Latest entry in `deploy/olm-catalog/nexus-repository-ha-operator-certified/` |
 
 The `prepare` job updates `Chart.yaml`, `values.yaml`, and `build/Dockerfile` and commits them.
-The job summary shows both Jenkins job links.
+It also auto-detects the previous operator version (the latest entry under
+`deploy/olm-catalog/nexus-repository-ha-operator-certified/`), used later for the OLM `replaces`
+field — no need to type it in. The job summary shows the detected version and both Jenkins job
+links; double-check the detected version there and cancel the run if it looks wrong before
+approving the gate.
 
 ### Step 2 — Trigger Jenkins builds (still manual)
 
@@ -98,6 +101,7 @@ Common causes and fixes:
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes; `gh repo sync` in `bundle-and-pr` mitigates this, but if it still fails, manually sync the fork and re-run |
 | PR already exists (open from a previous release) | The job fails with an error message. Merge or close the existing PR, then re-run only `bundle-and-pr`. |
+| "previous_version ... no longer matches" | Another release landed on `main` while this run was waiting at the approval gate. Re-run the whole workflow from `prepare` so the previous version is re-detected. |
 
 ---
 
