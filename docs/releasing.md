@@ -49,17 +49,17 @@ The repository is public, but that does not let anyone run the release.
   contributors, including anyone with a fork, cannot start workflows here, and fork pull requests
   do not receive secrets.
 - **Running past the first job** requires approval from a **required reviewer** of the
-  `operator-release-approval` environment (currently `bobotimi`). Until approved, the jobs do not
-  start and the secrets are not released.
+  `operator-release-approval` environment: currently `bobotimi` and the `nxrm-techleads` team.
+  Approval from either releases the job. Until approved, the jobs do not start and the secrets are
+  not released.
 - **Secrets** (`RH_API_TOKEN`, `RELEASE_PAT`) are environment secrets, only available to jobs that
   pass the approval. `RELEASE_PAT` belongs to a user authorised on the Red Hat Connect project.
 - **Merging workflow changes** needs one approving review on `main` (branch protection).
 
 Things to be aware of:
-- Anyone with write access can run the workflow from *any branch*, including one with a modified
-  workflow. The reviewer sees the branch name on the approval screen: only approve runs from
-  `main`. Restricting the environment's deployment branches to `main` (Settings → Environments →
-  `operator-release-approval` → Deployment branches) enforces this and is recommended.
+- The environment's deployment branches are restricted to `main`, so a run started from any other
+  branch (for example one with a modified workflow) is blocked before it can read the secrets. This
+  also means workflow changes must be merged to `main` before they can be run.
 - "Prevent self-review" is off, so the person who starts a run can also approve it.
 - Repository admins can bypass the environment protection.
 
@@ -70,8 +70,8 @@ Things to be aware of:
 GitHub repo → Settings → Environments → **New environment**
 
 - Name: `operator-release-approval`
-- Required reviewers: add at least one operator team member
-- Deployment branches: restrict to `main` (recommended)
+- Required reviewers: `bobotimi` and the `nxrm-techleads` team
+- Deployment branches: **Selected branches** → add `main`
 
 ### 2. Add the environment secrets
 
