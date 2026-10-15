@@ -41,6 +41,13 @@ GitHub Actions → **Operator Release** → **Run workflow**
 |---|---|---|
 | `operator_version` | `3.91.0-1` | New version you are releasing |
 | `cert_app_version` | `3.91.0-ubi-1` | The UBI image tag that will appear at RH after the build |
+| `dry_run` | `true` (default) | Leave ticked to rehearse. Untick only for a real release. See [Dry run](#dry-run) |
+
+Patch releases work the same way: for NXRM 3.96.4 use `operator_version` `3.96.4-1` and
+`cert_app_version` `3.96.4-ubi-1`. The previous version is simply the latest directory under
+`deploy/olm-catalog/...` (for example `3.96.0-1`), so `olm.replaces` points at it and
+`olm.skipRange` becomes `<3.96.4-1`. The workflow rejects a malformed version, or one older than
+the latest released version.
 
 The `prepare` job updates `Chart.yaml`, `values.yaml`, and `build/Dockerfile` and commits them.
 It also auto-detects the previous operator version (the latest entry under
@@ -105,7 +112,20 @@ Common causes and fixes:
 
 ---
 
-## First-release dry run
+## Dry run
+
+Run the workflow with `dry_run` ticked (the default) to rehearse without side effects:
+
+- `prepare` validates the inputs, detects the previous version and shows the version-file diff in
+  the job summary. It does not commit or push.
+- `bundle-and-pr` generates the OLM bundle using placeholder image SHAs and lists the generated
+  files and the `replaces`/`skipRange` values in the job summary. It also checks that
+  `RH_API_TOKEN` can reach the Red Hat API and that `RELEASE_PAT` has push access to
+  `sonatype/certified-operators`, and warns if an open PR from `sonatype:main` would block a real
+  run. It does not commit, push to the fork or open a PR.
+- The approval gate still applies, so approve it when you reach it. No Jenkins builds are needed.
+
+## First-release comparison
 
 On the first real release using this workflow, run it **in parallel** with the existing manual
 process. Compare the generated bundle files against what you would have produced manually. Only
