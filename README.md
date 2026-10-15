@@ -1,6 +1,12 @@
 # operator-nexus-repository
 IBM Operator for Sonatype Nexus Repository
 
+# Releasing
+
+Releases of the operator are done with the `Operator Release` GitHub Actions workflow. See
+[docs/releasing.md](docs/releasing.md) for the full process: who can run it, the dry-run mode, the
+step-by-step release, patch and backport releases, and troubleshooting.
+
 # Pre-requisites
 
 ### Storage

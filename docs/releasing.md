@@ -1,7 +1,69 @@
 # Releasing the Operator
 
-The `Operator Release` GitHub Actions workflow automates the bulk of the release.
+This guide covers everything about releasing the Sonatype Nexus Repository operator for OpenShift:
+what is released, who can run the automation, every step, dry runs, patch releases and troubleshooting.
 Full historical context in Confluence: *Releasing the OpenShift operator*.
+
+## Contents
+
+1. [Overview](#overview)
+2. [Who can run the release](#who-can-run-the-release)
+3. [One-time repository setup](#one-time-repository-setup)
+4. [Dry run (rehearsal)](#dry-run-rehearsal)
+5. [Release steps](#release-steps)
+6. [Version rules and patch releases](#version-rules-and-patch-releases)
+7. [Troubleshooting](#troubleshooting)
+
+## Overview
+
+A release publishes a new `ClusterServiceVersion` (CSV) bundle for
+`nexus-repository-ha-operator-certified` to Red Hat's `certified-operators` catalog. It needs two
+container images already published at Red Hat Connect, and then a bundle PR.
+
+| Artifact | Built by | Version example |
+|---|---|---|
+| Certified app image (`nexus-repository-manager`) | Jenkins job in `docker-nexus3` (`Jenkinsfile.rh`, builds `Dockerfile.rh.ubi.java21`) | `3.96.4-ubi-1` |
+| Operator image (`nexus-repository-ha-operator-certified`) | Jenkins job `operator-nexus-repository-release` | `3.96.4-1` |
+| OLM bundle (this repo, `deploy/olm-catalog/...`) | `Operator Release` GitHub workflow | `3.96.4-1` |
+
+The `Operator Release` workflow (`.github/workflows/operator-release.yml`) has two jobs. Jenkins
+cannot be reached from GitHub-hosted runners, so the two image builds stay manual and happen
+between the jobs.
+
+```
+Run workflow ──► [approve] prepare ──► you run both Jenkins builds ──► [approve] bundle-and-pr
+                 validate inputs         (~30 min, wait for images          fetch image SHAs from RH,
+                 detect previous         to be published at Red Hat)        generate bundle, commit,
+                 version, update                                            push to certified-operators
+                 version files, commit                                      fork, open PR to Red Hat
+```
+
+Both jobs use the `operator-release-approval` environment, because that is where the secrets live.
+Each therefore waits for an approval from a required reviewer before it starts.
+
+## Who can run the release
+
+The repository is public, but that does not let anyone run the release.
+
+- **Triggering a run** (`workflow_dispatch`) requires **write access** to this repository. Outside
+  contributors, including anyone with a fork, cannot start workflows here, and fork pull requests
+  do not receive secrets.
+- **Running past the first job** requires approval from a **required reviewer** of the
+  `operator-release-approval` environment: currently `bobotimi` and the `nxrm-techleads` team.
+  Approval from either releases the job. Until approved, the jobs do not start and the secrets are
+  not released.
+- **Secrets** (`RH_API_TOKEN`, `RELEASE_PAT`) are environment secrets, only available to jobs that
+  pass the approval. `RELEASE_PAT` belongs to a user authorised on the Red Hat Connect project.
+- **Merging workflow changes** needs one approving review on `main` (branch protection).
+
+Things to be aware of:
+- The environment's deployment branches are restricted to `main`, so a run started from any other
+  branch (for example one with a modified workflow) is blocked before it can read the secrets. This
+  also means workflow changes must be merged to `main` before they can be run.
+- "Prevent self-review" is off, so the person who starts a run can also approve it.
+- Repository admins can bypass the environment protection. This is deliberate ("Allow administrators to
+  bypass configured protection rules" is on) so a release is not blocked if no listed reviewer is
+  available.
 
 ## One-time repository setup
 
@@ -10,72 +72,94 @@ Full historical context in Confluence: *Releasing the OpenShift operator*.
 GitHub repo → Settings → Environments → **New environment**
 
 - Name: `operator-release-approval`
-- Required reviewers: add at least one operator team member
-- Leave deployment branch restrictions empty
+- Required reviewers: `bobotimi` and the `nxrm-techleads` team
+- Deployment branches: **Selected branches** → add `main`
 
-### 2. Add repository secrets
+### 2. Add the environment secrets
 
-GitHub repo → Settings → Secrets and variables → Actions → **New repository secret**
+On the environment page → **Environment secrets**. These must be environment secrets, not repository
+secrets, so they are only released after approval.
 
 | Name | Value |
 |---|---|
-| `RH_API_TOKEN` | Red Hat connect API Bearer token. Find it at connect.redhat.com → your account. This is the same token the Jenkins jobs use. |
-| `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). A fine-grained PAT scoped to `sonatype/certified-operators` (contents + pull requests: read/write) is a more secure alternative if supported by the RH connect project requirements. |
+| `RH_API_TOKEN` | Red Hat connect API Bearer token (connect.redhat.com → your account). Same token the Jenkins jobs use. |
+| `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). A fine-grained PAT scoped to `sonatype/certified-operators` (contents + pull requests: read/write) is a more secure alternative if the RH connect project allows it. |
+
+Never paste secret values into chat, tickets or logs.
 
 ### 3. Verify the PAT has write access to the fork
 
-Run once to confirm:
 ```bash
 GH_TOKEN=<your-pat> gh repo view sonatype/certified-operators
 ```
 
----
+The dry run also checks this for you.
+
+## Dry run (rehearsal)
+
+Use this whenever you want to check the automation without releasing. `dry_run` is **ticked by
+default**.
+
+GitHub Actions → **Operator Release** → **Run workflow** → keep `dry_run` ticked → enter versions.
+
+- `prepare` validates the inputs, detects the previous version and shows the version-file diff in
+  the job summary. It does not commit or push.
+- `bundle-and-pr` generates the OLM bundle using **placeholder image SHAs** and lists the generated
+  files and the `replaces`/`skipRange` values in the job summary. It checks that `RH_API_TOKEN` can
+  reach the Red Hat API and that `RELEASE_PAT` has push access to `sonatype/certified-operators`,
+  and warns if an open PR from `sonatype:main` would block a real run. It does not commit, push to
+  the fork or open a PR.
+- Both approvals are still required. No Jenkins builds are needed: approve the second one straight
+  away.
+
+Untick `dry_run` only for a real release.
 
 ## Release steps
 
-### Step 1 — Trigger the workflow
+### Step 1: Trigger the workflow
 
-GitHub Actions → **Operator Release** → **Run workflow**
+GitHub Actions → **Operator Release** → **Run workflow** (branch `main`)
 
-| Input | Example | Where to find it |
+| Input | Example | Notes |
 |---|---|---|
-| `operator_version` | `3.91.0-1` | New version you are releasing |
-| `cert_app_version` | `3.91.0-ubi-1` | The UBI image tag that will appear at RH after the build |
+| `operator_version` | `3.96.4-1` | New operator version being released |
+| `cert_app_version` | `3.96.4-ubi-1` | UBI app image tag that will appear at Red Hat after the build |
+| `dry_run` | unticked for a real release | Default is ticked |
 
-The `prepare` job updates `Chart.yaml`, `values.yaml`, and `build/Dockerfile` and commits them.
-It also auto-detects the previous operator version (the latest entry under
-`deploy/olm-catalog/nexus-repository-ha-operator-certified/`), used later for the OLM `replaces`
-field — no need to type it in. The job summary shows the detected version and both Jenkins job
-links; double-check the detected version there and cancel the run if it looks wrong before
-approving the gate.
+Approve the first gate (**Review pending deployments**). The `prepare` job then validates the
+versions, auto-detects the previous version, updates `Chart.yaml`, `values.yaml` and
+`build/Dockerfile`, and commits them to `main`. The job summary shows the detected previous version
+and the Jenkins links. **Check the detected version there and cancel the run if it is wrong.**
 
-### Step 2 — Trigger Jenkins builds (still manual)
+### Step 2: Build the images in Jenkins (manual)
 
-Jenkins is not reachable from GitHub-hosted runners, so these two builds remain manual:
-
-1. **Update `docker-nexus3` Dockerfile** — edit `Dockerfile.rh.ubi.java21` lines 23–24 and
-   42–44 to reference the new NXRM version, then trigger:
-   [docker-nexus-repository-red-hat-release](https://jenkins.ci.sonatype.dev/job/integrations/job/cloud/job/Red%20Hat/job/docker-nexus-repository-red-hat-release/)
-
-2. **Build the operator image** — trigger with version `<operator_version>`:
+1. **Update `docker-nexus3`**: edit `Dockerfile.rh.ubi.java21` (`version`/`release` labels at lines
+   23–24 and the `NEXUS_VERSION`, download URL and SHA-256 `ARG`s at lines 42–44) to the new NXRM
+   version, then trigger
+   [docker-nexus-repository-red-hat-release](https://jenkins.ci.sonatype.dev/job/integrations/job/cloud/job/Red%20Hat/job/docker-nexus-repository-red-hat-release/).
+   Build from the commit with the version you are releasing: `main` may already contain a newer NXRM
+   version.
+2. **Build the operator image**: trigger
    [operator-nexus-repository-release](https://jenkins.ci.sonatype.dev/job/nxrm/job/Red%20Hat/job/operator-nexus-repository-release/)
+   with version `<operator_version>`.
+3. Wait about 30 minutes for both builds and Red Hat publishing (including the scan) to finish.
 
-3. Wait ~30 minutes for both builds and Red Hat publishing to complete.
+### Step 3: Approve the second gate
 
-### Step 3 — Approve the gate
+When both images show as published at connect.redhat.com, click **Review pending deployments** →
+**Approve**. `bundle-and-pr` then (120-minute job timeout):
 
-In the workflow run, click **Review pending deployments** → **Approve**.
+- confirms the previous version is still the latest on `main`
+- polls the Red Hat API for both image SHAs (every 60 s, up to 90 min)
+- generates the OLM bundle with `scripts/new_version.sh bundle` and commits it
+- syncs the `sonatype/certified-operators` fork, copies the bundle in, pushes it
+- opens a PR to `redhat-openshift-ecosystem/certified-operators`
 
-The `bundle-and-pr` job runs automatically (120-minute job timeout):
-- Polls Red Hat API for both image SHAs (retries every 60s, up to 90 min)
-- Generates OLM bundle manifests and commits them
-- Syncs the `sonatype/certified-operators` fork, copies the bundle, opens a PR to RH upstream
+### Step 4: Review the PR
 
-### Step 4 — Review the PR
+The job summary links the PR. Red Hat's CI validates it and auto-merges on pass.
 
-The job summary shows the PR URL. Red Hat's CI validates and auto-merges on pass.
-
-### Step 5 — Finish up
+### Step 5: Finish up
 
 ```bash
 git tag <operator_version>
@@ -85,27 +169,46 @@ git push --tags
 Then set the Jira fix version via the
 [Jenkins job](https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/).
 
----
+## Version rules and patch releases
 
-## If `bundle-and-pr` fails
+- `operator_version` must look like `3.96.4-1` and `cert_app_version` like `3.96.4-ubi-1`.
+- The **previous version** is auto-detected as the highest directory under
+  `deploy/olm-catalog/nexus-repository-ha-operator-certified/` (version sort). It feeds the CSV
+  field `olm.replaces`. `olm.skipRange` is `<operator_version`.
+- `operator_version` must be newer than the previous version.
+- **Patch releases** need nothing special: `3.96.4-1` after `3.96.0-1` gives `replaces: 3.96.0-1`,
+  `skipRange: <3.96.4-1`, app version `3.96.4`, chart version `96.4.0`.
+- **Backports are not supported.** The operator publishes to a single `stable` channel where each
+  release replaces exactly one earlier release, and `package.yaml` points the channel head at the
+  version being released. A backport such as `3.90.4-1` replacing `3.90.3-1` would create a second
+  channel head and move the head backwards, which is an invalid catalog. Supporting it would need a
+  separate channel per release line (templates and package file changes), so the workflow rejects
+  any `operator_version` older than the latest release.
 
-The `prepare` commit and `await-builds` approval are already done — you do not need to repeat
-them. In the GitHub Actions UI, click **Re-run failed jobs** (not "Re-run all jobs") to rerun
-only `bundle-and-pr` with the same inputs.
+## Troubleshooting
 
-Common causes and fixes:
+### If the first job fails
+
+Nothing has been published. Fix the cause and re-run the workflow. If `prepare` pushed its commit
+before failing, check `main` before re-running.
+
+### If `bundle-and-pr` fails
+
+The `prepare` commit is already done. In the Actions UI use **Re-run failed jobs** (not "Re-run all
+jobs") to rerun only `bundle-and-pr` with the same inputs. Re-running a job that uses the
+environment asks for approval again.
 
 | Symptom | Fix |
 |---|---|
 | SHA not found within 90 min | Confirm the image is live at connect.redhat.com, then re-run |
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
-| Fork push conflict | RH upstream merged new changes; `gh repo sync` in `bundle-and-pr` mitigates this, but if it still fails, manually sync the fork and re-run |
-| PR already exists (open from a previous release) | The job fails with an error message. Merge or close the existing PR, then re-run only `bundle-and-pr`. |
-| "previous_version ... no longer matches" | Another release landed on `main` while this run was waiting at the approval gate. Re-run the whole workflow from `prepare` so the previous version is re-detected. |
+| Fork push conflict | RH upstream merged new changes. `gh repo sync` in `bundle-and-pr` mitigates this; if it still fails, manually sync the fork and re-run |
+| PR already exists (open from a previous release) | Merge or close the existing PR, then re-run only `bundle-and-pr` |
+| "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
+| "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
+| Empty token / authentication errors | The job did not get the environment secrets: check the secrets are environment secrets on `operator-release-approval` and the run was approved |
 
----
-
-## First-release dry run
+## First-release comparison
 
 On the first real release using this workflow, run it **in parallel** with the existing manual
 process. Compare the generated bundle files against what you would have produced manually. Only

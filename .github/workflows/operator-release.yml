@@ -11,11 +11,17 @@ on:
         description: 'Certified app image tag at RH (e.g. 3.91.0-ubi-1)'
         required: true
         type: string
+      dry_run:
+        description: 'Dry run: validate and generate files only. No commits, no fork push, no PR.'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   prepare:
-    name: Update version files
+    name: Update version files (approval required)
     runs-on: ubuntu-latest
+    environment: operator-release-approval
     outputs:
       previous_version: ${{ steps.detect_previous.outputs.previous_version }}
     steps:
@@ -36,7 +42,18 @@ jobs:
 
       - name: Detect previous operator version
         id: detect_previous
+        env:
+          NEW_VERSION: ${{ inputs.operator_version }}
+          CERT_APP_VERSION: ${{ inputs.cert_app_version }}
         run: |
+          if ! printf '%s' "$NEW_VERSION" | grep -Eq '^3\.[0-9]+\.[0-9]+-[0-9]+$'; then
+            echo "ERROR: operator_version '$NEW_VERSION' must look like 3.96.4-1" >&2
+            exit 1
+          fi
+          if ! printf '%s' "$CERT_APP_VERSION" | grep -Eq '^3\.[0-9]+\.[0-9]+-ubi-[0-9]+$'; then
+            echo "ERROR: cert_app_version '$CERT_APP_VERSION' must look like 3.96.4-ubi-1" >&2
+            exit 1
+          fi
           catalog_dir="deploy/olm-catalog/nexus-repository-ha-operator-certified"
           previous_version=$(find "$catalog_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
             | sort -V | tail -1)
@@ -44,8 +61,13 @@ jobs:
             echo "ERROR: no existing version directories found under $catalog_dir" >&2
             exit 1
           fi
-          if [ "$previous_version" = "${{ inputs.operator_version }}" ]; then
+          if [ "$previous_version" = "$NEW_VERSION" ]; then
             echo "ERROR: detected previous_version ($previous_version) equals operator_version — already released?" >&2
+            exit 1
+          fi
+          newest=$(printf '%s\n%s\n' "$previous_version" "$NEW_VERSION" | sort -V | tail -1)
+          if [ "$newest" != "$NEW_VERSION" ]; then
+            echo "ERROR: operator_version ($NEW_VERSION) is older than the latest released version ($previous_version)" >&2
             exit 1
           fi
           echo "Detected previous_version=$previous_version"
@@ -57,7 +79,22 @@ jobs:
             "${{ inputs.operator_version }}" \
             "${{ inputs.cert_app_version }}"
 
+      - name: Show version file changes (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          git diff --stat
+          {
+            echo "## DRY RUN — version files for ${{ inputs.operator_version }}"
+            echo ""
+            echo "Nothing was committed or pushed. Detected previous version: \`${{ steps.detect_previous.outputs.previous_version }}\`"
+            echo ""
+            echo '```diff'
+            git diff
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Commit version files
+        if: ${{ !inputs.dry_run }}
         run: |
           git add helm-charts/nxrm-ha/Chart.yaml \
                   helm-charts/nxrm-ha/values.yaml \
@@ -69,9 +106,9 @@ jobs:
       - name: Print next steps summary
         run: |
           {
-            echo "## Version files updated — ${{ inputs.operator_version }}"
+            echo "## Version files updated — ${{ inputs.operator_version }}${{ inputs.dry_run && ' (DRY RUN — nothing pushed)' || '' }}"
             echo ""
-            echo "Detected previous version (used for OLM \`replaces\`): \`${{ steps.detect_previous.outputs.previous_version }}\`"
+            echo "Previous version (used for OLM \`replaces\`): \`${{ steps.detect_previous.outputs.previous_version }}\` (auto-detected)"
             echo "If that's wrong, cancel this run before approving the gate below."
             echo ""
             echo "### Trigger both Jenkins builds now, then Approve the gate below"
@@ -87,19 +124,11 @@ jobs:
             echo "**4.** Return here → click **Review pending deployments** → **Approve**."
           } >> "$GITHUB_STEP_SUMMARY"
 
-  await-builds:
-    name: Await Jenkins builds (approve when both images published at RH)
+  bundle-and-pr:
+    name: Generate bundle and open certified-operators PR (approve when both images published at RH)
     needs: prepare
     runs-on: ubuntu-latest
     environment: operator-release-approval
-    steps:
-      - name: Builds approved
-        run: echo "Jenkins builds confirmed. Proceeding with bundle generation."
-
-  bundle-and-pr:
-    name: Generate bundle and open certified-operators PR
-    needs: [prepare, await-builds]
-    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -114,9 +143,9 @@ jobs:
       - name: Verify previous version is still latest
         run: |
           catalog_dir="deploy/olm-catalog/nexus-repository-ha-operator-certified"
+          expected="${{ needs.prepare.outputs.previous_version }}"
           current_latest=$(find "$catalog_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
             | sort -V | tail -1)
-          expected="${{ needs.prepare.outputs.previous_version }}"
           if [ "$current_latest" != "$expected" ]; then
             echo "ERROR: previous_version detected in 'prepare' ($expected) no longer matches" >&2
             echo "the latest version on main ($current_latest) — another release likely landed" >&2
@@ -124,8 +153,21 @@ jobs:
             exit 1
           fi
 
+      - name: Check Red Hat API access (dry run)
+        if: ${{ inputs.dry_run }}
+        env:
+          RH_API_TOKEN: ${{ secrets.RH_API_TOKEN }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer ${RH_API_TOKEN}" \
+            -H "Content-Type: application/json" -d '{}' \
+            "https://connect.redhat.com/api/v2/projects/64d3814688a42145092bb0ff/tags")
+          echo "Red Hat API returned HTTP $code"
+          [ "$code" = "200" ]
+
       - name: Retrieve operator image SHA
         id: operator_sha
+        if: ${{ !inputs.dry_run }}
         env:
           RH_API_TOKEN: ${{ secrets.RH_API_TOKEN }}
         run: |
@@ -137,6 +179,7 @@ jobs:
 
       - name: Retrieve app image SHA
         id: app_sha
+        if: ${{ !inputs.dry_run }}
         env:
           RH_API_TOKEN: ${{ secrets.RH_API_TOKEN }}
         run: |
@@ -151,10 +194,44 @@ jobs:
           ./scripts/new_version.sh bundle \
             "${{ needs.prepare.outputs.previous_version }}" \
             "${{ inputs.operator_version }}" \
-            "${{ steps.operator_sha.outputs.ref }}" \
-            "${{ steps.app_sha.outputs.ref }}"
+            "${{ steps.operator_sha.outputs.ref || 'registry.connect.redhat.com/sonatype/nexus-repository-ha-operator-certified@sha256:0000000000000000000000000000000000000000000000000000000000000000' }}" \
+            "${{ steps.app_sha.outputs.ref || 'registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:0000000000000000000000000000000000000000000000000000000000000000' }}"
+
+      - name: Show generated bundle (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          dir="deploy/olm-catalog/nexus-repository-ha-operator-certified/${{ inputs.operator_version }}"
+          test -d "$dir/manifests" && test -d "$dir/metadata"
+          csv=$(ls "$dir"/manifests/*.clusterserviceversion.yaml)
+          {
+            echo "## DRY RUN — generated bundle for ${{ inputs.operator_version }}"
+            echo ""
+            echo "Placeholder image SHAs were used. Nothing was committed, pushed or opened as a PR."
+            echo ""
+            echo '```'
+            find "$dir" -type f | sort
+            echo ""
+            grep -nE 'olm.skipRange|olm.replaces|^  name:|^  version:' "$csv"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check fork access and open PRs (dry run)
+        if: ${{ inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          push=$(gh api repos/sonatype/certified-operators --jq '.permissions.push')
+          echo "PAT push permission on sonatype/certified-operators: $push"
+          [ "$push" = "true" ]
+          open=$(gh pr list --repo redhat-openshift-ecosystem/certified-operators \
+            --head "sonatype:main" --json url --jq '.[0].url // empty')
+          if [ -n "$open" ]; then
+            echo "WARNING: a PR from sonatype:main is already open: $open (a real run would fail)" >&2
+            echo "- WARNING: existing certified-operators PR blocks a real run: $open" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Commit bundle files
+        if: ${{ !inputs.dry_run }}
         run: |
           git add deploy/
           if git diff --cached --quiet; then
@@ -166,6 +243,7 @@ jobs:
           fi
 
       - name: Sync certified-operators fork with RH upstream
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
@@ -173,6 +251,7 @@ jobs:
             --source redhat-openshift-ecosystem/certified-operators
 
       - name: Clone certified-operators fork
+        if: ${{ !inputs.dry_run }}
         env:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
@@ -184,9 +263,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Copy bundle to certified-operators
+        if: ${{ !inputs.dry_run }}
         run: ./scripts/copy-to-certified.sh "${{ inputs.operator_version }}"
 
       - name: Commit and push to certified-operators fork
+        if: ${{ !inputs.dry_run }}
         run: |
           cd "${{ github.workspace }}/../certified-operators"
           git add "operators/nexus-repository-ha-operator-certified/${{ inputs.operator_version }}/"
@@ -199,6 +280,7 @@ jobs:
 
       - name: Open PR to Red Hat upstream
         id: pr
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
@@ -221,6 +303,7 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
 
       - name: Job summary
+        if: ${{ !inputs.dry_run }}
         run: |
           {
             echo "## Release ${{ inputs.operator_version }} — bundle complete"
