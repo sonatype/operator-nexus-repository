@@ -83,7 +83,8 @@ repository secret, so it is only released after approval.
 
 | Name | Value |
 |---|---|
-| `RELEASE_PAT` | **Fine-grained** GitHub personal access token (the `sonatype` org rejects classic tokens). Resource owner `sonatype`, access to `sonatype/operator-nexus-repository` and `sonatype/certified-operators`, repository permissions Contents and Pull requests read/write. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Create it at github.com/settings/personal-access-tokens; a `sonatype` org owner must approve the request before it has any access. Fine-grained tokens expire (maximum one year), so note the expiry and renew before it. |
+| `RELEASE_PAT` | **Fine-grained** GitHub personal access token (the `sonatype` org rejects classic tokens). Resource owner `sonatype`, access to `sonatype/operator-nexus-repository` and `sonatype/certified-operators`, repository permissions Contents, Pull requests and **Workflows** read/write (Workflows is needed for `gh repo sync` when upstream changed `.github/workflows`). **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Create it at github.com/settings/personal-access-tokens; a `sonatype` org owner must approve the request before it has any access. Fine-grained tokens expire (maximum one year), so note the expiry and renew before it. |
+| `UPSTREAM_PR_PAT` | **Classic** GitHub personal access token with the `public_repo` scope, used only by the "Open PR to Red Hat upstream" step. A fine-grained token cannot open a PR on `redhat-openshift-ecosystem/certified-operators` because that repo is outside its resource owner. Must belong to a user listed in "Authorized Github User Accounts" (same as `RELEASE_PAT`). Never use it against `sonatype` resources. Classic tokens can expire too, so note the expiry. |
 
 Never paste secret values into chat, tickets or logs.
 
@@ -260,6 +261,8 @@ environment asks for approval again.
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
 | "`sonatype` forbids access via a personal access token (classic)" | `RELEASE_PAT` holds a classic token. Replace it with a fine-grained one (see Secrets) |
+| `Resource not accessible by personal access token (createPullRequest)` | The PR step is using a fine-grained token. It must use the classic `UPSTREAM_PR_PAT` environment secret |
+| `Upstream commits contain workflow changes, which require the workflow scope` | `RELEASE_PAT` lacks the Workflows read/write permission. Add it, or click Sync fork on `sonatype/certified-operators`, then re-run only `bundle-and-pr` |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |
 
 ## First-release comparison

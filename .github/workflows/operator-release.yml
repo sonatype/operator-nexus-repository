@@ -278,7 +278,9 @@ jobs:
         id: pr
         if: ${{ !inputs.dry_run }}
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          # A fine-grained token cannot open a PR on a repo outside its resource owner (sonatype),
+          # so this step uses a separate classic token that is never used against sonatype resources.
+          GH_TOKEN: ${{ secrets.UPSTREAM_PR_PAT }}
         run: |
           existing=$(gh pr list \
             --repo redhat-openshift-ecosystem/certified-operators \
