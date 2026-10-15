@@ -7,6 +7,37 @@ Releases of the operator are done with the `Operator Release` GitHub Actions wor
 [docs/releasing.md](docs/releasing.md) for the full process: who can run it, the dry-run mode, the
 step-by-step release, patch and backport releases, and troubleshooting.
 
+### Happy path
+
+1. Run **Operator Release** with `dry_run` off and approve the first gate. The version files are
+   updated on `main`.
+2. Build the app and operator images in Jenkins and wait for Red Hat to publish them.
+3. Approve the second gate. The workflow reads both image digests from Red Hat's catalog, generates
+   the OLM bundle, pushes it to the `sonatype/certified-operators` fork and opens a PR to
+   `redhat-openshift-ecosystem/certified-operators`.
+4. Red Hat's pipeline validates the PR (usually 35 to 60 minutes) and merges it.
+5. The workflow sees the merge, commits the bundle to `main` and finishes. Then tag the release and
+   set the Jira fix version.
+
+Rehearse first with `dry_run` ticked (the default): nothing is committed, pushed or opened.
+
+### When something goes wrong
+
+| Scenario | What the workflow does | What you do |
+|---|---|---|
+| Images not yet published at Red Hat | Polls every 60 s for up to 90 min, then fails. Nothing was published. | Check Jenkins and Red Hat, then **Re-run failed jobs**. |
+| Catalog unavailable, or different digests for one tag | Fails immediately and refuses to guess. | Retry later, or investigate the catalog. |
+| Red Hat's pipeline fails on the PR (`operator-hosted-pipeline/failed` label, PR stays open) | Stops early with an error. Nothing is committed to `main` for the bundle. | Push a fix to the PR branch (`main` of the fork), or comment `/pipeline restart operator-hosted-pipeline` if the failure was on Red Hat's side. Red Hat re-validates the same PR. When it merges, run **Operator Release - Finalize**. Do not re-run the release. |
+| PR not merged within 2 hours | Fails after the wait. Nothing is committed to `main` for the bundle. | When the PR merges, run **Operator Release - Finalize**. |
+| PR closed without merging | Fails. Nothing is committed to `main` for the bundle. | If the PR can be reopened after a fix (as happened in April), reopen it and run **Operator Release - Finalize** when it merges. Otherwise fix the cause and re-run the release. |
+| Another release PR is already open | Fails before opening a new one. | Merge or close the old PR first. |
+| Re-run after a partial run | Skips the version-file commit if the files are already updated. | **Re-run failed jobs**. |
+
+**Operator Release - Finalize** copies the bundle that Red Hat actually merged (including any fixes
+made in the PR) into `deploy/` on `main`. Leave its version blank to use the latest PR opened from
+`sonatype:main`. If a fix was needed, also correct its cause in the bundle templates or
+`scripts/new_version.sh`, so the next release does not repeat it.
+
 # Pre-requisites
 
 ### Storage
