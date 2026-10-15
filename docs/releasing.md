@@ -150,6 +150,13 @@ and the Jenkins links. **Check the detected version there and cancel the run if 
    [operator-nexus-repository-release](https://jenkins.ci.sonatype.dev/job/nxrm/job/Red%20Hat/job/operator-nexus-repository-release/)
    with version `<operator_version>`.
 3. Wait about 30 minutes for both builds and Red Hat publishing (including the scan) to finish.
+4. **Check the `latest` tag.** Red Hat usually moves `latest` to the new image on its own. If it does
+   not, run **Sync Tags** on the image in Red Hat Connect: the
+   [Nexus Repository Red Hat Universal Base Image](https://connect.redhat.com/projects/5e61d90a38776799eb517bd2/images)
+   (app) and the
+   [Nexus Repository HA Certified Operator](https://connect.redhat.com/projects/64d3814688a42145092bb0ff/images)
+   (operator). The workflow only waits for the version tag to be published and certified, so it does
+   not notice a stale `latest`, and users pulling `latest` would miss the release.
 
 ### Step 3: Approve the second gate
 

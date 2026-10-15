@@ -11,7 +11,9 @@ step-by-step release, patch and backport releases, and troubleshooting.
 
 1. Run **Operator Release** with `dry_run` off and approve the first gate. The version files are
    updated on `main`.
-2. Build the app and operator images in Jenkins and wait for Red Hat to publish them.
+2. Build the app and operator images in Jenkins and wait for Red Hat to publish them. If `latest`
+   was not moved to the new images, run **Sync Tags** on each image in Red Hat Connect (see
+   `docs/releasing.md`).
 3. Approve the second gate. The workflow reads both image digests from Red Hat's catalog, generates
    the OLM bundle, pushes it to the `sonatype/certified-operators` fork and opens a PR to
    `redhat-openshift-ecosystem/certified-operators`.
