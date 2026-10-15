@@ -27,11 +27,23 @@ MAX_ATTEMPTS="${MAX_ATTEMPTS:-90}"
 
 attempt=0
 while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
-  response=$(curl -sf -X POST \
+  # -w appends the HTTP status after the body; split it off so auth/endpoint errors are not
+  # mistaken for "tag not published yet".
+  raw=$(curl -s -w '\n%{http_code}' -X POST \
     -H "Authorization: Bearer ${RH_API_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{}' \
-    "${API_BASE}/api/v2/projects/${PROJECT_ID}/tags" 2>/dev/null || printf '{}')
+    "${API_BASE}/api/v2/projects/${PROJECT_ID}/tags" 2>/dev/null || printf '{}\n000')
+  http_code=$(printf '%s\n' "$raw" | tail -n 1)
+  response=$(printf '%s\n' "$raw" | sed '$d')
+
+  case "$http_code" in
+    401|403|404)
+      printf 'ERROR: Red Hat API returned HTTP %s for project %s - check RH_API_TOKEN and the project ID\n' \
+        "$http_code" "$PROJECT_ID" >&2
+      exit 1
+      ;;
+  esac
 
   digest=$(printf '%s' "$response" | jq -r --arg tag "$IMAGE_TAG" \
     '[.tags[] | select(.name == $tag and .scan_status == "passed")] | first | .digest // empty' \

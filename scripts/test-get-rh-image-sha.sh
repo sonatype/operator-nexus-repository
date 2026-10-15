@@ -15,11 +15,13 @@ run_test() {
   fi
 }
 
-# Creates a temporary directory containing a mock `curl` binary that prints $1 and exits 0
+# Creates a temporary directory containing a mock `curl` binary that prints $1, then the HTTP
+# status $2 (default 200) on its own line, mimicking `curl -s -w '\n%{http_code}'`, and exits 0
 mock_curl() {
   response="$1"
+  code="${2:-200}"
   mock_dir=$(mktemp -d "${TMPDIR:-/tmp}/mock-XXXXXX")
-  printf '#!/bin/sh\nprintf '"'"'%%s'"'"' '"'"'%s'"'"'\n' "$response" > "$mock_dir/curl"
+  printf '#!/bin/sh\nprintf '"'"'%%s\\n%%s\\n'"'"' '"'"'%s'"'"' '"'"'%s'"'"'\n' "$response" "$code" > "$mock_dir/curl"
   chmod +x "$mock_dir/curl"
   printf '%s' "$mock_dir"
 }
@@ -56,6 +58,24 @@ mock_dir=$(mock_curl '{"tags":[{"name":"3.89.0-1","scan_status":"passed","digest
 actual=$(PATH="$mock_dir:$PATH" RH_API_TOKEN="t" MAX_ATTEMPTS=1 \
   "$SCRIPT_DIR/get-rh-image-sha.sh" "proj-id" "3.90.3-1" "reg/img" 2>/dev/null)
 run_test "picks correct tag among multiple" "reg/img@sha256:new" "$actual"
+rm -rf "$mock_dir"
+
+# --- Test 6: exits 1 immediately on HTTP 404 (bad token/project), not after retrying ---
+mock_dir=$(mock_curl '{"message":"not found"}' 404)
+actual_err=$(PATH="$mock_dir:$PATH" RH_API_TOKEN="t" MAX_ATTEMPTS=3 \
+  "$SCRIPT_DIR/get-rh-image-sha.sh" "proj-id" "3.90.3-1" "reg/img" 2>&1 >/dev/null); actual_exit=$?
+run_test "exits 1 on HTTP 404" "1" "$actual_exit"
+case "$actual_err" in
+  *"HTTP 404"*) run_test "reports HTTP 404 in error" "yes" "yes" ;;
+  *) run_test "reports HTTP 404 in error" "yes" "no: $actual_err" ;;
+esac
+rm -rf "$mock_dir"
+
+# --- Test 7: exits 1 on HTTP 401 ---
+mock_dir=$(mock_curl '{}' 401)
+PATH="$mock_dir:$PATH" RH_API_TOKEN="t" MAX_ATTEMPTS=3 \
+  "$SCRIPT_DIR/get-rh-image-sha.sh" "proj-id" "3.90.3-1" "reg/img" 2>/dev/null; actual_exit=$?
+run_test "exits 1 on HTTP 401" "1" "$actual_exit"
 rm -rf "$mock_dir"
 
 printf '\nResults: %d passed, %d failed\n' "$PASS" "$FAIL"
