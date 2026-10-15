@@ -122,5 +122,19 @@ jobs:
             echo ""
             echo "Bundle from ${{ steps.pr.outputs.url }} is on main."
             echo ""
-            echo "Remaining: \`git tag ${{ steps.pr.outputs.version }} && git push --tags\`, then set the Jira fix version."
+            echo "Remaining: set the Jira fix version."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Tag the release
+        if: ${{ !inputs.dry_run }}
+        run: |
+          tag="${{ steps.pr.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists on origin - skipping"
+          else
+            # HEAD is the checkout plus the bundle commit, so the tag lands on the commit with the bundle.
+            test -d "deploy/olm-catalog/nexus-repository-ha-operator-certified/$tag" \
+              || { echo "ERROR: no bundle for $tag in this checkout, refusing to tag" >&2; exit 1; }
+            git tag "$tag"
+            git push origin "refs/tags/$tag"
+          fi

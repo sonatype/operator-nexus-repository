@@ -345,6 +345,20 @@ jobs:
             git push
           fi
 
+      - name: Tag the release
+        if: ${{ !inputs.dry_run && steps.wait_pr.outputs.outcome == 'merged' }}
+        run: |
+          tag="${{ inputs.operator_version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists on origin - skipping"
+          else
+            # HEAD is the checkout plus the bundle commit, so the tag lands on the commit with the bundle.
+            test -d "deploy/olm-catalog/nexus-repository-ha-operator-certified/$tag" \
+              || { echo "ERROR: no bundle for $tag in this checkout, refusing to tag" >&2; exit 1; }
+            git tag "$tag"
+            git push origin "refs/tags/$tag"
+          fi
+
       - name: Job summary
         if: ${{ !inputs.dry_run }}
         run: |
@@ -359,6 +373,6 @@ jobs:
             echo ""
             echo "### Remaining manual steps"
             echo "1. The PR was merged by Red Hat and the bundle was committed to main"
-            echo "2. \`git tag ${{ inputs.operator_version }} && git push --tags\`"
+            echo "2. The release was tagged ${{ inputs.operator_version }}"
             echo "3. Set Jira fix version: https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/"
           } >> "$GITHUB_STEP_SUMMARY"

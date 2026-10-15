@@ -212,12 +212,11 @@ rejected.
 
 ### Step 5: Finish up
 
-```bash
-git tag <operator_version>
-git push --tags
-```
+The workflow (or Finalize) tags the commit that holds the bundle with `<operator_version>` and pushes
+the tag. It skips if the tag already exists on `origin`. The tag step needs `RELEASE_PAT` to have
+Contents read/write, which it already does.
 
-Then set the Jira fix version via the
+Set the Jira fix version via the
 [Jenkins job](https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/).
 
 ## Version rules and patch releases
