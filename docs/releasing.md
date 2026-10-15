@@ -173,8 +173,8 @@ auto-merges on pass.
 
 - **Merged:** the workflow commits the bundle to `main` and finishes. Only now is the release
   recorded in this repository.
-- **Pipeline failed (PR stays open):** Red Hat marks the PR with the `operator-hosted-pipeline/failed` label and the job stops early and fails, with **nothing committed to
-  `main` for the bundle**. Red Hat leaves the PR open, so fix it there: read the failing check and
+- **Pipeline failed (PR stays open):** Red Hat marks the PR with the `operator-hosted-pipeline/failed` label and the job stops early and fails, with
+  **nothing committed to `main` for the bundle**. Red Hat leaves the PR open, so fix it there: read the bot's Pipeline Summary comment and
   push a change to the PR branch (`main` of `sonatype/certified-operators`). That re-runs Red Hat's
   validation on the same PR. Do **not** re-run the release workflow, because it would fail on the
   open PR. If the failure was on Red Hat's side (as in September 2025, when a pipeline bug failed the preflight test), comment `/pipeline restart operator-hosted-pipeline` on the PR instead of changing anything. When the PR merges, run **Operator Release - Finalize** (below).
@@ -248,8 +248,8 @@ environment asks for approval again.
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes. `gh repo sync` in `bundle-and-pr` mitigates this; if it still fails, manually sync the fork and re-run |
 | PR already exists (open from a previous release) | Merge or close the existing PR, then re-run only `bundle-and-pr` |
-| Red Hat checks failed on the PR | Push a fix to the PR, then run Operator Release - Finalize once it merges. Do not re-run the release |
-| PR closed without merging | Nothing was committed for the bundle. Fix the cause, then re-run the release |
+| Red Hat pipeline failed on the PR | Push a fix (or comment `/pipeline restart operator-hosted-pipeline`), then run Operator Release - Finalize once it merges. Do not re-run the release |
+| PR closed without merging | Nothing was committed for the bundle. If the PR can be reopened after a fix, do that and run Finalize once it merges; otherwise fix the cause and re-run the release |
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |

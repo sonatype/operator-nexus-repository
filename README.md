@@ -27,9 +27,9 @@ Rehearse first with `dry_run` ticked (the default): nothing is committed, pushed
 |---|---|---|
 | Images not yet published at Red Hat | Polls every 60 s for up to 90 min, then fails. Nothing was published. | Check Jenkins and Red Hat, then **Re-run failed jobs**. |
 | Catalog unavailable, or different digests for one tag | Fails immediately and refuses to guess. | Retry later, or investigate the catalog. |
-| Red Hat's checks fail on the PR (PR stays open) | Stops early with an error. Nothing is committed to `main` for the bundle. | Push a fix to the PR branch (`main` of the fork). Red Hat re-validates the same PR. When it merges, run **Operator Release - Finalize**. Do not re-run the release. |
+| Red Hat's pipeline fails on the PR (`operator-hosted-pipeline/failed` label, PR stays open) | Stops early with an error. Nothing is committed to `main` for the bundle. | Push a fix to the PR branch (`main` of the fork), or comment `/pipeline restart operator-hosted-pipeline` if the failure was on Red Hat's side. Red Hat re-validates the same PR. When it merges, run **Operator Release - Finalize**. Do not re-run the release. |
 | PR not merged within 2 hours | Fails after the wait. Nothing is committed to `main` for the bundle. | When the PR merges, run **Operator Release - Finalize**. |
-| PR closed without merging | Fails. Nothing is committed to `main` for the bundle. | Fix the cause and re-run the release. |
+| PR closed without merging | Fails. Nothing is committed to `main` for the bundle. | If the PR can be reopened after a fix (as happened in April), reopen it and run **Operator Release - Finalize** when it merges. Otherwise fix the cause and re-run the release. |
 | Another release PR is already open | Fails before opening a new one. | Merge or close the old PR first. |
 | Re-run after a partial run | Skips the version-file commit if the files are already updated. | **Re-run failed jobs**. |
 
