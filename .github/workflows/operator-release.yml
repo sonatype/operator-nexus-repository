@@ -134,7 +134,7 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     environment: operator-release-approval
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
         with:
@@ -304,7 +304,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-          # Red Hat's pipeline validates the PR (usually 15-30 min) and auto-merges it on pass.
+          # Red Hat's pipeline validates the PR (usually 35-60 min) and auto-merges it on pass.
           outcome=$(./scripts/wait-for-pr.sh "${{ steps.pr.outputs.pr_url }}")
           echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
           echo "PR outcome: $outcome"
@@ -313,8 +313,9 @@ jobs:
             merged) ;;
             failed)
               echo "ERROR: Red Hat's checks failed on $pr (the PR stays open)." >&2
-              echo "Read the failing check, push a fix to the PR branch (sonatype/certified-operators main)," >&2
-              echo "which re-runs Red Hat's validation. When it merges, run 'Operator Release - Finalize'." >&2
+              echo "Read the bot's Pipeline Summary comment. Push a fix to the PR branch (sonatype/certified-operators main)," >&2
+              echo "or, if it was a Red Hat pipeline problem, comment '/pipeline restart operator-hosted-pipeline'." >&2
+              echo "Either re-runs validation. When the PR merges, run 'Operator Release - Finalize'." >&2
               exit 1
               ;;
             closed)

@@ -154,7 +154,7 @@ and the Jenkins links. **Check the detected version there and cancel the run if 
 ### Step 3: Approve the second gate
 
 When both images show as published at connect.redhat.com, click **Review pending deployments** →
-**Approve**. `bundle-and-pr` then (180-minute job timeout):
+**Approve**. `bundle-and-pr` then (240-minute job timeout):
 
 - confirms the previous version is still the latest on `main`
 - polls the Red Hat catalog for both image SHAs (every 60 s, up to 90 min). An image counts once it
@@ -167,18 +167,18 @@ When both images show as published at connect.redhat.com, click **Review pending
 
 ### Step 4: Review the PR
 
-The job summary links the PR. The workflow then waits for it (up to 60 minutes, or until a check fails). Red Hat's
-certification pipeline validates the submission, which typically takes 15 to 30 minutes, and
+The job summary links the PR. The workflow then waits for it (up to 2 hours, or until the PR fails). Red Hat's
+certification pipeline validates the submission, which typically takes 35 to 55 minutes (recent PRs: 36, 37 and 54 minutes from pipeline start to merge, of which the preflight test is 20 to 35), and
 auto-merges on pass.
 
 - **Merged:** the workflow commits the bundle to `main` and finishes. Only now is the release
   recorded in this repository.
-- **Checks failed (PR stays open):** the job stops early and fails, with **nothing committed to
+- **Pipeline failed (PR stays open):** Red Hat marks the PR with the `operator-hosted-pipeline/failed` label and the job stops early and fails, with **nothing committed to
   `main` for the bundle**. Red Hat leaves the PR open, so fix it there: read the failing check and
   push a change to the PR branch (`main` of `sonatype/certified-operators`). That re-runs Red Hat's
   validation on the same PR. Do **not** re-run the release workflow, because it would fail on the
-  open PR. When the PR merges, run **Operator Release - Finalize** (below).
-- **Not merged in time, or merged later:** the job fails after the 60-minute wait. When the PR
+  open PR. If the failure was on Red Hat's side (as in September 2025, when a pipeline bug failed the preflight test), comment `/pipeline restart operator-hosted-pipeline` on the PR instead of changing anything. When the PR merges, run **Operator Release - Finalize** (below).
+- **Not merged in time, or merged later:** the job fails after the 2-hour wait. When the PR
   merges, run **Operator Release - Finalize**.
 - **Closed without merging:** nothing was committed to `main`. Fix the cause and re-run the release.
 

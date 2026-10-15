@@ -55,6 +55,16 @@ actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "htt
 run_test "keeps waiting while checks are running" "timeout" "$actual"
 rm -rf "$mock_dir"
 
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[],"labels":[{"name":"approved"},{"name":"operator-hosted-pipeline/failed"}]}')
+actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=5 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
+run_test "reports failed on the hosted-pipeline failed label" "failed" "$actual"
+rm -rf "$mock_dir"
+
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[],"labels":[{"name":"operator-hosted-pipeline/started"},{"name":"approved"}]}')
+actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
+run_test "keeps waiting while the pipeline is started" "timeout" "$actual"
+rm -rf "$mock_dir"
+
 mock_dir=$(mock_gh "" 1)
 PATH="$mock_dir:$PATH" MAX_ATTEMPTS=3 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" >/dev/null 2>&1
 run_test "exits 1 when the PR cannot be read" "1" "$?"
