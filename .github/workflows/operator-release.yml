@@ -33,7 +33,8 @@ jobs:
         run: |
           shellcheck --severity=error scripts/get-rh-image-sha.sh \
                                       scripts/new_version.sh \
-                                      scripts/copy-to-certified.sh
+                                      scripts/copy-to-certified.sh \
+                                      scripts/wait-for-pr.sh
 
       - name: Configure git
         run: |
@@ -129,7 +130,7 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     environment: operator-release-approval
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
         with:
@@ -233,18 +234,6 @@ jobs:
             echo "- WARNING: existing certified-operators PR blocks a real run: $open" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Commit bundle files
-        if: ${{ !inputs.dry_run }}
-        run: |
-          git add deploy/
-          if git diff --cached --quiet; then
-            echo "No bundle changes detected — skipping commit"
-          else
-            git commit -m "release ${{ inputs.operator_version }}: add OLM bundle"
-            git pull --rebase origin main
-            git push
-          fi
-
       - name: Sync certified-operators fork with RH upstream
         if: ${{ !inputs.dry_run }}
         env:
@@ -305,6 +294,44 @@ jobs:
             --base main)
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for Red Hat certification of the PR
+        id: wait_pr
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          # Red Hat's pipeline validates the PR (usually 15-30 min) and auto-merges it on pass.
+          outcome=$(./scripts/wait-for-pr.sh "${{ steps.pr.outputs.pr_url }}")
+          echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
+          echo "PR outcome: $outcome"
+          case "$outcome" in
+            merged) ;;
+            closed)
+              echo "ERROR: Red Hat closed the PR without merging it: ${{ steps.pr.outputs.pr_url }}" >&2
+              echo "Nothing was committed to main for the bundle. Read the PR checks, fix the cause," >&2
+              echo "close any leftover state in sonatype/certified-operators, then re-run the workflow." >&2
+              exit 1
+              ;;
+            *)
+              echo "ERROR: PR not merged after the wait: ${{ steps.pr.outputs.pr_url }}" >&2
+              echo "Nothing was committed to main for the bundle. If the PR merges later, commit" >&2
+              echo "deploy/olm-catalog/.../${{ inputs.operator_version }} to main by hand." >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Commit bundle files to main
+        if: ${{ !inputs.dry_run && steps.wait_pr.outputs.outcome == 'merged' }}
+        run: |
+          git add deploy/
+          if git diff --cached --quiet; then
+            echo "No bundle changes detected — skipping commit"
+          else
+            git commit -m "release ${{ inputs.operator_version }}: add OLM bundle"
+            git pull --rebase origin main
+            git push
+          fi
+
       - name: Job summary
         if: ${{ !inputs.dry_run }}
         run: |
@@ -318,7 +345,7 @@ jobs:
             echo "| Certified-operators PR | ${{ steps.pr.outputs.pr_url }} |"
             echo ""
             echo "### Remaining manual steps"
-            echo "1. Monitor the PR above — Red Hat CI validates and auto-merges on pass"
+            echo "1. The PR was merged by Red Hat and the bundle was committed to main"
             echo "2. \`git tag ${{ inputs.operator_version }} && git push --tags\`"
             echo "3. Set Jira fix version: https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/"
           } >> "$GITHUB_STEP_SUMMARY"

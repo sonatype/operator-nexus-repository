@@ -154,22 +154,31 @@ and the Jenkins links. **Check the detected version there and cancel the run if 
 ### Step 3: Approve the second gate
 
 When both images show as published at connect.redhat.com, click **Review pending deployments** →
-**Approve**. `bundle-and-pr` then (120-minute job timeout):
+**Approve**. `bundle-and-pr` then (180-minute job timeout):
 
 - confirms the previous version is still the latest on `main`
 - polls the Red Hat catalog for both image SHAs (every 60 s, up to 90 min). An image counts once it
   is published and marked certified; the lookup fails if the catalog returns different digests for
   one tag
-- generates the OLM bundle with `scripts/new_version.sh bundle` and commits it
+- generates the OLM bundle with `scripts/new_version.sh bundle`
 - syncs the `sonatype/certified-operators` fork, copies the bundle in, pushes it
 - opens a PR to `redhat-openshift-ecosystem/certified-operators`
+- waits for Red Hat to merge it, then commits the bundle to `main`
 
 ### Step 4: Review the PR
 
-The job summary links the PR. The workflow finishes as soon as the PR is open and does not wait for
-Red Hat. Red Hat's certification pipeline then validates the submission, which typically takes 15 to
-30 minutes, and auto-merges on pass. Watch the PR for the result. Do not start another release until
-it has merged or been closed, because a second PR from `sonatype:main` is rejected.
+The job summary links the PR. The workflow then waits for it (up to 60 minutes). Red Hat's
+certification pipeline validates the submission, which typically takes 15 to 30 minutes, and
+auto-merges on pass.
+
+- **Merged:** the workflow commits the bundle to `main` and finishes. Only now is the release
+  recorded in this repository.
+- **Closed or not merged in time:** the job fails and **nothing is committed to `main` for the
+  bundle**, so there is nothing to revert. Read the PR checks, fix the cause and re-run the whole
+  workflow. If the PR merges after the wait ran out, commit the bundle directory to `main` by hand.
+
+Do not start another release while the PR is open, because a second PR from `sonatype:main` is
+rejected.
 
 ### Step 5: Finish up
 
@@ -217,6 +226,7 @@ environment asks for approval again.
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes. `gh repo sync` in `bundle-and-pr` mitigates this; if it still fails, manually sync the fork and re-run |
 | PR already exists (open from a previous release) | Merge or close the existing PR, then re-run only `bundle-and-pr` |
+| PR closed or not merged in time | Nothing was committed for the bundle. Fix the cause shown in the PR checks, then re-run the whole workflow |
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |
