@@ -1,66 +1,67 @@
 #!/bin/sh
-# Polls the Red Hat connect API until the given image tag is published with scan_status=passed.
-# Usage: get-rh-image-sha.sh <projectId> <imageTag> <registryPrefix>
+# Polls the Red Hat catalog (Pyxis) until the given image tag is published and certified, then
+# prints its digest. The catalog lists published images to anonymous callers, so no token is needed.
+# Usage: get-rh-image-sha.sh <imageTag> <registryPrefix>
 # Output: <registryPrefix>@<digest>  (e.g. registry.connect.redhat.com/sonatype/img@sha256:...)
 # Env:
-#   RH_API_TOKEN  - Red Hat connect Bearer token (required)
-#   RH_API_BASE   - API base URL (default: https://connect.redhat.com)
-#   MAX_ATTEMPTS  - number of 60-second retries before timeout (default: 90)
+#   CATALOG_API_BASE - catalog API base URL (default: https://catalog.redhat.com/api/containers/v1)
+#   MAX_ATTEMPTS     - number of 60-second retries before timeout (default: 90)
 
 set -e
 
-if [ -z "$RH_API_TOKEN" ]; then
-  printf 'ERROR: RH_API_TOKEN must be set\n' >&2
+if [ "$#" -ne 2 ]; then
+  printf 'Usage: %s <imageTag> <registryPrefix>\n' "$0" >&2
   exit 1
 fi
 
-if [ "$#" -ne 3 ]; then
-  printf 'Usage: %s <projectId> <imageTag> <registryPrefix>\n' "$0" >&2
-  exit 1
-fi
-
-PROJECT_ID="$1"
-IMAGE_TAG="$2"
-REGISTRY_PREFIX="$3"
-API_BASE="${RH_API_BASE:-https://connect.redhat.com}"
+IMAGE_TAG="$1"
+REGISTRY_PREFIX="$2"
+API_BASE="${CATALOG_API_BASE:-https://catalog.redhat.com/api/containers/v1}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-90}"
+
+# registry.connect.redhat.com/sonatype/img -> host=registry.connect.redhat.com repo=sonatype/img
+REGISTRY_HOST="${REGISTRY_PREFIX%%/*}"
+REPOSITORY="${REGISTRY_PREFIX#*/}"
+URL="${API_BASE}/repositories/registry/${REGISTRY_HOST}/repository/${REPOSITORY}/images"
+URL="${URL}?filter=repositories.tags.name==${IMAGE_TAG}&include=data.docker_image_digest,data.certified"
 
 attempt=0
 while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
-  # -w appends the HTTP status after the body; split it off so auth/endpoint errors are not
-  # mistaken for "tag not published yet".
-  raw=$(curl -s -w '\n%{http_code}' -X POST \
-    -H "Authorization: Bearer ${RH_API_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d '{}' \
-    "${API_BASE}/api/v2/projects/${PROJECT_ID}/tags" 2>/dev/null || printf '{}\n000')
+  # -w appends the HTTP status after the body so an error response is not mistaken for
+  # "tag not published yet". An unpublished tag is HTTP 200 with an empty data list.
+  raw=$(curl -s -w '\n%{http_code}' "$URL" 2>/dev/null || printf '{}\n000')
   http_code=$(printf '%s\n' "$raw" | tail -n 1)
   response=$(printf '%s\n' "$raw" | sed '$d')
 
-  case "$http_code" in
-    401|403|404)
-      printf 'ERROR: Red Hat API returned HTTP %s for project %s - check RH_API_TOKEN and the project ID\n' \
-        "$http_code" "$PROJECT_ID" >&2
-      exit 1
-      ;;
-  esac
+  if [ "$http_code" != "200" ]; then
+    printf 'ERROR: Red Hat catalog returned HTTP %s for %s tag %s\n' \
+      "$http_code" "$REPOSITORY" "$IMAGE_TAG" >&2
+    exit 1
+  fi
 
-  digest=$(printf '%s' "$response" | jq -r --arg tag "$IMAGE_TAG" \
-    '[.tags[] | select(.name == $tag and .scan_status == "passed")] | first | .digest // empty' \
+  digests=$(printf '%s' "$response" | jq -r \
+    '[.data[]? | select(.certified == true) | .docker_image_digest] | unique | .[]' \
     2>/dev/null || true)
+  count=$(printf '%s' "$digests" | grep -c . || true)
 
-  if [ -n "$digest" ]; then
-    printf '%s@%s\n' "$REGISTRY_PREFIX" "$digest"
+  if [ "$count" -gt 1 ]; then
+    printf 'ERROR: %d different certified digests found for %s tag %s, refusing to guess:\n%s\n' \
+      "$count" "$REPOSITORY" "$IMAGE_TAG" "$digests" >&2
+    exit 1
+  fi
+
+  if [ "$count" -eq 1 ]; then
+    printf '%s@%s\n' "$REGISTRY_PREFIX" "$digests"
     exit 0
   fi
 
   attempt=$((attempt + 1))
   remaining=$((MAX_ATTEMPTS - attempt))
-  printf 'Tag %s not yet published (attempt %d/%d, %d remaining). Retrying in 60s...\n' \
+  printf 'Tag %s not yet published and certified (attempt %d/%d, %d remaining). Retrying in 60s...\n' \
     "$IMAGE_TAG" "$attempt" "$MAX_ATTEMPTS" "$remaining" >&2
   [ "$attempt" -lt "$MAX_ATTEMPTS" ] && sleep 60
 done
 
-printf 'ERROR: Timed out after %d attempts waiting for tag %s (scan_status=passed)\n' \
+printf 'ERROR: Timed out after %d attempts waiting for tag %s to be published and certified\n' \
   "$MAX_ATTEMPTS" "$IMAGE_TAG" >&2
 exit 1

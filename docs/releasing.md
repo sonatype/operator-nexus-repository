@@ -32,7 +32,7 @@ between the jobs.
 
 ```
 Run workflow ──► [approve] prepare ──► you run both Jenkins builds ──► [approve] bundle-and-pr
-                 validate inputs         (~30 min, wait for images          fetch image SHAs from RH,
+                 validate inputs         (~30 min, wait for images          read image SHAs from RH catalog,
                  detect previous         to be published at Red Hat)        generate bundle, commit,
                  version, update                                            push to certified-operators
                  version files, commit                                      fork, open PR to Red Hat
@@ -52,8 +52,9 @@ The repository is public, but that does not let anyone run the release.
   `operator-release-approval` environment: currently `bobotimi` and the `nxrm-techleads` team.
   Approval from either releases the job. Until approved, the jobs do not start and the secrets are
   not released.
-- **Secrets** (`RH_API_TOKEN`, `RELEASE_PAT`) are environment secrets, only available to jobs that
-  pass the approval. `RELEASE_PAT` belongs to a user authorised on the Red Hat Connect project.
+- **Secrets** (`RELEASE_PAT`) are environment secrets, only available to jobs that pass the
+  approval. `RELEASE_PAT` belongs to a user authorised on the Red Hat Connect project. Image digests
+  are read from Red Hat's public catalog, so no Red Hat API key is needed.
 - **Merging workflow changes** needs one approving review on `main` (branch protection).
 
 Things to be aware of:
@@ -75,17 +76,22 @@ GitHub repo → Settings → Environments → **New environment**
 - Required reviewers: `bobotimi` and the `nxrm-techleads` team
 - Deployment branches: **Selected branches** → add `main`
 
-### 2. Add the environment secrets
+### 2. Add the environment secret
 
-On the environment page → **Environment secrets**. These must be environment secrets, not repository
-secrets, so they are only released after approval.
+On the environment page → **Environment secrets**. This must be an environment secret, not a
+repository secret, so it is only released after approval.
 
 | Name | Value |
 |---|---|
-| `RH_API_TOKEN` | Red Hat connect API Bearer token (connect.redhat.com → your account). Same token the Jenkins jobs use. |
 | `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). A fine-grained PAT scoped to `sonatype/certified-operators` (contents + pull requests: read/write) is a more secure alternative if the RH connect project allows it. |
 
 Never paste secret values into chat, tickets or logs.
+
+The workflow no longer uses `RH_API_TOKEN`: the old Red Hat Connect endpoint it called
+(`connect.redhat.com/api/v2/...`) now returns an HTML 404, and image digests are read from the public
+catalog instead. The Jenkins jobs keep their own Red Hat API keys (`preflight --pyxis-api-token`,
+keys listed at connect.redhat.com/account/api-keys). Any `RH_API_TOKEN` secret left on the environment
+can be deleted.
 
 ### 3. Verify the PAT has write access to the fork
 
@@ -105,10 +111,11 @@ GitHub Actions → **Operator Release** → **Run workflow** → keep `dry_run` 
 - `prepare` validates the inputs, detects the previous version and shows the version-file diff in
   the job summary. It does not commit or push.
 - `bundle-and-pr` generates the OLM bundle using **placeholder image SHAs** and lists the generated
-  files and the `replaces`/`skipRange` values in the job summary. It checks that `RH_API_TOKEN` can
-  reach the Red Hat API and that `RELEASE_PAT` has push access to `sonatype/certified-operators`,
-  and warns if an open PR from `sonatype:main` would block a real run. It does not commit, push to
-  the fork or open a PR.
+  files and the `replaces`/`skipRange` values in the job summary. It checks the Red Hat catalog
+  lookup by fetching the digests of the previous release and comparing them with its bundle, and that
+  `RELEASE_PAT` has push access to `sonatype/certified-operators`. It warns if an open PR from
+  `sonatype:main` would block a real run. It does not commit, push to the fork or open a PR. The
+  lookup of the new images cannot be tested in a dry run, because they are not published yet.
 - Both approvals are still required. No Jenkins builds are needed: approve the second one straight
   away.
 
@@ -150,14 +157,19 @@ When both images show as published at connect.redhat.com, click **Review pending
 **Approve**. `bundle-and-pr` then (120-minute job timeout):
 
 - confirms the previous version is still the latest on `main`
-- polls the Red Hat API for both image SHAs (every 60 s, up to 90 min)
+- polls the Red Hat catalog for both image SHAs (every 60 s, up to 90 min). An image counts once it
+  is published and marked certified; the lookup fails if the catalog returns different digests for
+  one tag
 - generates the OLM bundle with `scripts/new_version.sh bundle` and commits it
 - syncs the `sonatype/certified-operators` fork, copies the bundle in, pushes it
 - opens a PR to `redhat-openshift-ecosystem/certified-operators`
 
 ### Step 4: Review the PR
 
-The job summary links the PR. Red Hat's CI validates it and auto-merges on pass.
+The job summary links the PR. The workflow finishes as soon as the PR is open and does not wait for
+Red Hat. Red Hat's certification pipeline then validates the submission, which typically takes 15 to
+30 minutes, and auto-merges on pass. Watch the PR for the result. Do not start another release until
+it has merged or been closed, because a second PR from `sonatype:main` is rejected.
 
 ### Step 5: Finish up
 
@@ -200,13 +212,14 @@ environment asks for approval again.
 
 | Symptom | Fix |
 |---|---|
-| SHA not found within 90 min | Confirm the image is live at connect.redhat.com, then re-run |
+| SHA not found within 90 min | Confirm the image is published and certified at connect.redhat.com. The lookup can also be tried by hand: `scripts/get-rh-image-sha.sh <tag> <registry>/sonatype/<image>` |
+| "Red Hat catalog returned HTTP ..." | The catalog API is down or its address changed. Retry later, or check `https://catalog.redhat.com/api/containers/v1` |
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes. `gh repo sync` in `bundle-and-pr` mitigates this; if it still fails, manually sync the fork and re-run |
 | PR already exists (open from a previous release) | Merge or close the existing PR, then re-run only `bundle-and-pr` |
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
-| Empty token / authentication errors | The job did not get the environment secrets: check the secrets are environment secrets on `operator-release-approval` and the run was approved |
+| Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |
 
 ## First-release comparison
 
