@@ -39,8 +39,10 @@ jobs:
           INPUT_VERSION: ${{ inputs.operator_version }}
         run: |
           # Every release opens its PR from sonatype:main; newest first.
+          # gh pr list --head matches the branch name only, not owner:branch, so filter on the fork owner.
           prs=$(gh pr list --repo redhat-openshift-ecosystem/certified-operators \
-            --head "sonatype:main" --state all --limit 20 --json url,title,state)
+            --head main --state all --limit 100 --json url,title,state,headRepositoryOwner \
+            --jq '[.[] | select(.headRepositoryOwner.login == "sonatype")]')
           if [ -n "$INPUT_VERSION" ]; then
             pr=$(printf '%s' "$prs" | jq -c --arg v "($INPUT_VERSION)" \
               '[.[] | select(.title | contains($v))] | first // empty')

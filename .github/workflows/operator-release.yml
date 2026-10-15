@@ -232,7 +232,8 @@ jobs:
           echo "PAT push permission on sonatype/certified-operators: $push"
           [ "$push" = "true" ]
           open=$(gh pr list --repo redhat-openshift-ecosystem/certified-operators \
-            --head "sonatype:main" --json url --jq '.[0].url // empty')
+            --head main --json url,headRepositoryOwner \
+            --jq '[.[] | select(.headRepositoryOwner.login == "sonatype")][0].url // empty')
           if [ -n "$open" ]; then
             echo "WARNING: a PR from sonatype:main is already open: $open (a real run would fail)" >&2
             echo "- WARNING: existing certified-operators PR blocks a real run: $open" >> "$GITHUB_STEP_SUMMARY"
@@ -284,9 +285,9 @@ jobs:
         run: |
           existing=$(gh pr list \
             --repo redhat-openshift-ecosystem/certified-operators \
-            --head "sonatype:main" \
-            --json url \
-            --jq '.[0].url // empty' 2>/dev/null || true)
+            --head main \
+            --json url,headRepositoryOwner \
+            --jq '[.[] | select(.headRepositoryOwner.login == "sonatype")][0].url // empty' 2>/dev/null || true)
           if [ -n "$existing" ]; then
             echo "ERROR: A certified-operators PR from sonatype:main is already open: $existing" >&2
             echo "Merge or close that PR before running a new release, then re-run only bundle-and-pr." >&2
