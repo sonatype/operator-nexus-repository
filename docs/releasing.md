@@ -61,7 +61,9 @@ Things to be aware of:
   branch (for example one with a modified workflow) is blocked before it can read the secrets. This
   also means workflow changes must be merged to `main` before they can be run.
 - "Prevent self-review" is off, so the person who starts a run can also approve it.
-- Repository admins can bypass the environment protection.
+- Repository admins can bypass the environment protection. This is deliberate ("Allow administrators to
+  bypass configured protection rules" is on) so a release is not blocked if no listed reviewer is
+  available.
 
 ## One-time repository setup
 
