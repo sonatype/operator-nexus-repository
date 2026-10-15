@@ -19,8 +19,9 @@ on:
 
 jobs:
   prepare:
-    name: Update version files
+    name: Update version files (approval required)
     runs-on: ubuntu-latest
+    environment: operator-release-approval
     outputs:
       previous_version: ${{ steps.detect_previous.outputs.previous_version }}
     steps:
@@ -107,7 +108,7 @@ jobs:
           {
             echo "## Version files updated — ${{ inputs.operator_version }}${{ inputs.dry_run && ' (DRY RUN — nothing pushed)' || '' }}"
             echo ""
-            echo "Detected previous version (used for OLM \`replaces\`): \`${{ steps.detect_previous.outputs.previous_version }}\`"
+            echo "Previous version (used for OLM \`replaces\`): \`${{ steps.detect_previous.outputs.previous_version }}\` (auto-detected)"
             echo "If that's wrong, cancel this run before approving the gate below."
             echo ""
             echo "### Trigger both Jenkins builds now, then Approve the gate below"
@@ -123,19 +124,11 @@ jobs:
             echo "**4.** Return here → click **Review pending deployments** → **Approve**."
           } >> "$GITHUB_STEP_SUMMARY"
 
-  await-builds:
-    name: Await Jenkins builds (approve when both images published at RH)
+  bundle-and-pr:
+    name: Generate bundle and open certified-operators PR (approve when both images published at RH)
     needs: prepare
     runs-on: ubuntu-latest
     environment: operator-release-approval
-    steps:
-      - name: Builds approved
-        run: echo "Jenkins builds confirmed. Proceeding with bundle generation."
-
-  bundle-and-pr:
-    name: Generate bundle and open certified-operators PR
-    needs: [prepare, await-builds]
-    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -150,9 +143,9 @@ jobs:
       - name: Verify previous version is still latest
         run: |
           catalog_dir="deploy/olm-catalog/nexus-repository-ha-operator-certified"
+          expected="${{ needs.prepare.outputs.previous_version }}"
           current_latest=$(find "$catalog_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
             | sort -V | tail -1)
-          expected="${{ needs.prepare.outputs.previous_version }}"
           if [ "$current_latest" != "$expected" ]; then
             echo "ERROR: previous_version detected in 'prepare' ($expected) no longer matches" >&2
             echo "the latest version on main ($current_latest) — another release likely landed" >&2
