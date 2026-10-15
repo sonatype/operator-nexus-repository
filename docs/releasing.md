@@ -83,7 +83,7 @@ repository secret, so it is only released after approval.
 
 | Name | Value |
 |---|---|
-| `RELEASE_PAT` | GitHub Personal Access Token with `repo` scope. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Generate at github.com/settings/tokens → Tokens (classic). A fine-grained PAT scoped to `sonatype/certified-operators` (contents + pull requests: read/write) is a more secure alternative if the RH connect project allows it. |
+| `RELEASE_PAT` | **Fine-grained** GitHub personal access token (the `sonatype` org rejects classic tokens). Resource owner `sonatype`, access to `sonatype/operator-nexus-repository` and `sonatype/certified-operators`, repository permissions Contents and Pull requests read/write. **Must belong to a GitHub user listed in "Authorized Github User Accounts" on the [RH connect bundle project](https://connect.redhat.com/projects/64ef748bfe44a37dc8b33eea/settings).** Create it at github.com/settings/personal-access-tokens; a `sonatype` org owner must approve the request before it has any access. Fine-grained tokens expire (maximum one year), so note the expiry and renew before it. |
 
 Never paste secret values into chat, tickets or logs.
 
@@ -252,6 +252,7 @@ environment asks for approval again.
 | PR closed without merging | Nothing was committed for the bundle. If the PR can be reopened after a fix, do that and run Finalize once it merges; otherwise fix the cause and re-run the release |
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
+| "`sonatype` forbids access via a personal access token (classic)" | `RELEASE_PAT` holds a classic token. Replace it with a fine-grained one (see Secrets) |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |
 
 ## First-release comparison

@@ -20,12 +20,12 @@ on:
 jobs:
   prepare:
     name: Update version files (approval required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: operator-release-approval
     outputs:
       previous_version: ${{ steps.detect_previous.outputs.previous_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.RELEASE_PAT }}
 
@@ -132,11 +132,11 @@ jobs:
   bundle-and-pr:
     name: Generate bundle and open certified-operators PR (approve when both images published at RH)
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: operator-release-approval
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.RELEASE_PAT }}
 
