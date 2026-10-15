@@ -167,15 +167,37 @@ When both images show as published at connect.redhat.com, click **Review pending
 
 ### Step 4: Review the PR
 
-The job summary links the PR. The workflow then waits for it (up to 60 minutes). Red Hat's
+The job summary links the PR. The workflow then waits for it (up to 60 minutes, or until a check fails). Red Hat's
 certification pipeline validates the submission, which typically takes 15 to 30 minutes, and
 auto-merges on pass.
 
 - **Merged:** the workflow commits the bundle to `main` and finishes. Only now is the release
   recorded in this repository.
-- **Closed or not merged in time:** the job fails and **nothing is committed to `main` for the
-  bundle**, so there is nothing to revert. Read the PR checks, fix the cause and re-run the whole
-  workflow. If the PR merges after the wait ran out, commit the bundle directory to `main` by hand.
+- **Checks failed (PR stays open):** the job stops early and fails, with **nothing committed to
+  `main` for the bundle**. Red Hat leaves the PR open, so fix it there: read the failing check and
+  push a change to the PR branch (`main` of `sonatype/certified-operators`). That re-runs Red Hat's
+  validation on the same PR. Do **not** re-run the release workflow, because it would fail on the
+  open PR. When the PR merges, run **Operator Release - Finalize** (below).
+- **Not merged in time, or merged later:** the job fails after the 60-minute wait. When the PR
+  merges, run **Operator Release - Finalize**.
+- **Closed without merging:** nothing was committed to `main`. Fix the cause and re-run the release.
+
+### Step 4b: Finalize (after fixes, or when Red Hat merged late)
+
+GitHub Actions → **Operator Release - Finalize** → **Run workflow** (branch `main`).
+
+- `operator_version`: leave **blank** to use the latest PR opened from `sonatype:main`, or enter the
+  version (for example `3.96.4-1`). GitHub cannot pre-fill this field with the expected version, so
+  blank means "the PR the release workflow opened".
+- Keep `dry_run` ticked first to see the change, then untick it.
+- It refuses to run unless that PR is **merged**. It copies the merged `manifests/` and `metadata/`
+  from `redhat-openshift-ecosystem/certified-operators` into
+  `deploy/olm-catalog/nexus-repository-ha-operator-certified/<version>/` and commits to `main`, so
+  any correction made in the PR is kept.
+- It uses the same `operator-release-approval` environment, so it needs the same approval.
+
+If a fix was needed, also correct its cause in the bundle templates or `scripts/new_version.sh`
+through a normal PR, otherwise the next release repeats the problem.
 
 Do not start another release while the PR is open, because a second PR from `sonatype:main` is
 rejected.
@@ -226,7 +248,8 @@ environment asks for approval again.
 | `new_version.sh bundle` fails | Check script output for the exact error, fix if needed, then re-run |
 | Fork push conflict | RH upstream merged new changes. `gh repo sync` in `bundle-and-pr` mitigates this; if it still fails, manually sync the fork and re-run |
 | PR already exists (open from a previous release) | Merge or close the existing PR, then re-run only `bundle-and-pr` |
-| PR closed or not merged in time | Nothing was committed for the bundle. Fix the cause shown in the PR checks, then re-run the whole workflow |
+| Red Hat checks failed on the PR | Push a fix to the PR, then run Operator Release - Finalize once it merges. Do not re-run the release |
+| PR closed without merging | Nothing was committed for the bundle. Fix the cause, then re-run the release |
 | "previous_version ... no longer matches" | Another release landed on `main` during the wait. Re-run the whole workflow from the start so the previous version is re-detected |
 | "operator_version ... is older than the latest released version" | Wrong version typed. Backports are not supported (see above) |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |

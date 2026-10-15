@@ -23,21 +23,36 @@ mock_gh() {
   printf '%s' "$mock_dir"
 }
 
-mock_dir=$(mock_gh MERGED)
+mock_dir=$(mock_gh '{"state":"MERGED","statusCheckRollup":[]}')
 actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
 run_test "reports merged" "merged" "$actual"
 rm -rf "$mock_dir"
 
-mock_dir=$(mock_gh CLOSED)
+mock_dir=$(mock_gh '{"state":"CLOSED","statusCheckRollup":[]}')
 actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
 run_test "reports closed" "closed" "$actual"
 rm -rf "$mock_dir"
 
-mock_dir=$(mock_gh OPEN)
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[]}')
 actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
 actual_exit=$?
 run_test "reports timeout while still open" "timeout" "$actual"
 run_test "timeout exits 0" "0" "$actual_exit"
+rm -rf "$mock_dir"
+
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[{"conclusion":"SUCCESS"},{"conclusion":"FAILURE"}]}')
+actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=5 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
+run_test "reports failed on a failed check without waiting" "failed" "$actual"
+rm -rf "$mock_dir"
+
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[{"state":"ERROR"}]}')
+actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=5 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
+run_test "reports failed on an errored status" "failed" "$actual"
+rm -rf "$mock_dir"
+
+mock_dir=$(mock_gh '{"state":"OPEN","statusCheckRollup":[{"conclusion":"SUCCESS"},{"status":"IN_PROGRESS","conclusion":""}]}')
+actual=$(PATH="$mock_dir:$PATH" MAX_ATTEMPTS=1 "$SCRIPT_DIR/wait-for-pr.sh" "https://x/pr/1" 2>/dev/null)
+run_test "keeps waiting while checks are running" "timeout" "$actual"
 rm -rf "$mock_dir"
 
 mock_dir=$(mock_gh "" 1)

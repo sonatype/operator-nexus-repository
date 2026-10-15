@@ -100,9 +100,13 @@ jobs:
           git add helm-charts/nxrm-ha/Chart.yaml \
                   helm-charts/nxrm-ha/values.yaml \
                   build/Dockerfile
-          git commit -m "release ${{ inputs.operator_version }}: update image version files"
-          git pull --rebase origin main
-          git push
+          if git diff --cached --quiet; then
+            echo "Version files already at ${{ inputs.operator_version }} - skipping commit"
+          else
+            git commit -m "release ${{ inputs.operator_version }}: update image version files"
+            git pull --rebase origin main
+            git push
+          fi
 
       - name: Print next steps summary
         run: |
@@ -304,18 +308,23 @@ jobs:
           outcome=$(./scripts/wait-for-pr.sh "${{ steps.pr.outputs.pr_url }}")
           echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
           echo "PR outcome: $outcome"
+          pr="${{ steps.pr.outputs.pr_url }}"
           case "$outcome" in
             merged) ;;
+            failed)
+              echo "ERROR: Red Hat's checks failed on $pr (the PR stays open)." >&2
+              echo "Read the failing check, push a fix to the PR branch (sonatype/certified-operators main)," >&2
+              echo "which re-runs Red Hat's validation. When it merges, run 'Operator Release - Finalize'." >&2
+              exit 1
+              ;;
             closed)
-              echo "ERROR: Red Hat closed the PR without merging it: ${{ steps.pr.outputs.pr_url }}" >&2
-              echo "Nothing was committed to main for the bundle. Read the PR checks, fix the cause," >&2
-              echo "close any leftover state in sonatype/certified-operators, then re-run the workflow." >&2
+              echo "ERROR: Red Hat closed the PR without merging it: $pr" >&2
+              echo "Nothing was committed to main for the bundle. Fix the cause, then re-run the release." >&2
               exit 1
               ;;
             *)
-              echo "ERROR: PR not merged after the wait: ${{ steps.pr.outputs.pr_url }}" >&2
-              echo "Nothing was committed to main for the bundle. If the PR merges later, commit" >&2
-              echo "deploy/olm-catalog/.../${{ inputs.operator_version }} to main by hand." >&2
+              echo "ERROR: PR not merged after the wait: $pr" >&2
+              echo "If it merges later, run 'Operator Release - Finalize' to bring the bundle into main." >&2
               exit 1
               ;;
           esac

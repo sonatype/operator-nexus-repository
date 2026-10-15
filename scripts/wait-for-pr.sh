@@ -1,7 +1,7 @@
 #!/bin/sh
-# Polls a pull request until it is merged or closed, or the wait runs out.
+# Polls a pull request until it is merged, closed or has a failed check, or the wait runs out.
 # Usage: wait-for-pr.sh <prUrl>
-# Output (stdout): merged | closed | timeout
+# Output (stdout): merged | closed | failed | timeout
 # Exit: 0 once an outcome is known (including timeout), 1 on usage error or if the PR cannot be read.
 # Env:
 #   MAX_ATTEMPTS  - number of 60-second checks before timeout (default: 60)
@@ -19,15 +19,25 @@ MAX_ATTEMPTS="${MAX_ATTEMPTS:-60}"
 
 attempt=0
 while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
-  if ! state=$(gh pr view "$PR_URL" --json state --jq .state 2>/dev/null); then
+  if ! json=$(gh pr view "$PR_URL" --json state,statusCheckRollup 2>/dev/null); then
     printf 'ERROR: could not read pull request %s\n' "$PR_URL" >&2
     exit 1
   fi
+  state=$(printf '%s' "$json" | jq -r '.state')
 
   case "$state" in
     MERGED) printf 'merged\n'; exit 0 ;;
     CLOSED) printf 'closed\n'; exit 0 ;;
   esac
+
+  # Red Hat leaves a rejected PR open; pushing a fix to it re-runs validation. Stop early so the
+  # job does not sit idle for the full wait.
+  failed=$(printf '%s' "$json" | jq -r '[.statusCheckRollup[]? |
+    select(.conclusion == "FAILURE" or .conclusion == "TIMED_OUT" or .state == "FAILURE" or .state == "ERROR")] | length')
+  if [ "$failed" -gt 0 ]; then
+    printf 'failed\n'
+    exit 0
+  fi
 
   attempt=$((attempt + 1))
   printf 'PR still open (check %d/%d). Red Hat certification usually takes 15-30 minutes. Retrying in 60s...\n' \

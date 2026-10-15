@@ -1,0 +1,124 @@
+name: Operator Release - Finalize
+
+# Brings the bundle that Red Hat actually merged into certified-operators back into this repo's main.
+# Run it after the certified-operators PR opened by "Operator Release" has been merged, in particular
+# when the PR needed fixes pushed to it or merged after the release workflow stopped waiting.
+
+on:
+  workflow_dispatch:
+    inputs:
+      operator_version:
+        description: 'Operator version to finalize (e.g. 3.96.4-1). Leave blank to use the latest PR opened from sonatype:main.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run: show what would be committed. No commit, no push.'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  finalize:
+    name: Copy merged bundle to main (approval required)
+    runs-on: ubuntu-latest
+    environment: operator-release-approval
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Find the certified-operators PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          INPUT_VERSION: ${{ inputs.operator_version }}
+        run: |
+          # Every release opens its PR from sonatype:main; newest first.
+          prs=$(gh pr list --repo redhat-openshift-ecosystem/certified-operators \
+            --head "sonatype:main" --state all --limit 20 --json url,title,state)
+          if [ -n "$INPUT_VERSION" ]; then
+            pr=$(printf '%s' "$prs" | jq -c --arg v "($INPUT_VERSION)" \
+              '[.[] | select(.title | contains($v))] | first // empty')
+          else
+            pr=$(printf '%s' "$prs" | jq -c 'first // empty')
+          fi
+          if [ -z "$pr" ]; then
+            echo "ERROR: no certified-operators PR from sonatype:main found for '${INPUT_VERSION:-latest}'" >&2
+            exit 1
+          fi
+          url=$(printf '%s' "$pr" | jq -r .url)
+          state=$(printf '%s' "$pr" | jq -r .state)
+          title=$(printf '%s' "$pr" | jq -r .title)
+          version=$(printf '%s' "$title" | sed -n 's/.*(\(3\.[0-9]*\.[0-9]*-[0-9]*\)).*/\1/p')
+          if [ -z "$version" ]; then
+            echo "ERROR: could not read a version from the PR title: $title" >&2
+            exit 1
+          fi
+          echo "PR: $url ($state) - $title"
+          if [ "$state" != "MERGED" ]; then
+            echo "ERROR: the PR is $state, not MERGED. Wait for Red Hat to merge it (push fixes to the" >&2
+            echo "PR if its checks failed), then run this workflow again." >&2
+            exit 1
+          fi
+          {
+            echo "url=$url"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the merged bundle from Red Hat
+        run: |
+          version="${{ steps.pr.outputs.version }}"
+          path="operators/nexus-repository-ha-operator-certified/$version"
+          git clone --quiet --depth 1 --filter=blob:none --sparse \
+            https://github.com/redhat-openshift-ecosystem/certified-operators.git "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" sparse-checkout set "$path"
+          test -d "$RUNNER_TEMP/upstream/$path/manifests" && test -d "$RUNNER_TEMP/upstream/$path/metadata" \
+            || { echo "ERROR: $path/manifests or metadata missing upstream" >&2; exit 1; }
+
+      - name: Copy bundle into deploy/
+        run: |
+          version="${{ steps.pr.outputs.version }}"
+          src="$RUNNER_TEMP/upstream/operators/nexus-repository-ha-operator-certified/$version"
+          dest="deploy/olm-catalog/nexus-repository-ha-operator-certified/$version"
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp -r "$src/manifests" "$src/metadata" "$dest/"
+          git add -A "$dest"
+          git status --short
+
+      - name: Show changes (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          {
+            echo "## DRY RUN - finalize ${{ steps.pr.outputs.version }}"
+            echo ""
+            echo "Merged PR: ${{ steps.pr.outputs.url }}"
+            echo "Nothing was committed or pushed."
+            echo ""
+            echo '```'
+            git diff --cached --stat
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit bundle to main
+        if: ${{ !inputs.dry_run }}
+        run: |
+          if git diff --cached --quiet; then
+            echo "main already has the merged bundle - nothing to commit"
+          else
+            git commit -m "release ${{ steps.pr.outputs.version }}: add OLM bundle merged by Red Hat"
+            git pull --rebase origin main
+            git push
+          fi
+          {
+            echo "## Finalized ${{ steps.pr.outputs.version }}"
+            echo ""
+            echo "Bundle from ${{ steps.pr.outputs.url }} is on main."
+            echo ""
+            echo "Remaining: \`git tag ${{ steps.pr.outputs.version }} && git push --tags\`, then set the Jira fix version."
+          } >> "$GITHUB_STEP_SUMMARY"
