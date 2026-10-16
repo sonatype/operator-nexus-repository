@@ -11,8 +11,9 @@ Full historical context in Confluence: *Releasing the OpenShift operator*.
 3. [One-time repository setup](#one-time-repository-setup)
 4. [Dry run (rehearsal)](#dry-run-rehearsal)
 5. [Release steps](#release-steps)
-6. [Version rules and patch releases](#version-rules-and-patch-releases)
-7. [Troubleshooting](#troubleshooting)
+6. [What to do in each scenario](#what-to-do-in-each-scenario)
+7. [Version rules and patch releases](#version-rules-and-patch-releases)
+8. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -35,8 +36,13 @@ Run workflow ──► [approve] prepare ──► you run both Jenkins builds �
                  validate inputs         (~30 min, wait for images          read image SHAs from RH catalog,
                  detect previous         to be published at Red Hat)        generate bundle, commit,
                  version, update                                            push to certified-operators
-                 version files, commit                                      fork, open PR to Red Hat
+                 version files, commit                                      fork, open PR to Red Hat,
+                                                                            wait for merge, commit the
+                                                                            bundle to main, tag it
 ```
+
+If the PR is merged late, or needed fixes, **Operator Release - Finalize** does the last part
+(commit the bundle to `main` and tag it) instead. See [What to do in each scenario](#what-to-do-in-each-scenario).
 
 Both jobs use the `operator-release-approval` environment, because that is where the secrets live.
 Each therefore waits for an approval from a required reviewer before it starts.
@@ -52,8 +58,8 @@ The repository is public, but that does not let anyone run the release.
   `operator-release-approval` environment: currently `bobotimi` and the `nxrm-techleads` team.
   Approval from either releases the job. Until approved, the jobs do not start and the secrets are
   not released.
-- **Secrets** (`RELEASE_PAT`) are environment secrets, only available to jobs that pass the
-  approval. `RELEASE_PAT` belongs to a user authorised on the Red Hat Connect project. Image digests
+- **Secrets** (`RELEASE_PAT`, `UPSTREAM_PR_PAT`) are environment secrets, only available to jobs that
+  pass the approval. Both belong to a user authorised on the Red Hat Connect project. Image digests
   are read from Red Hat's public catalog, so no Red Hat API key is needed.
 - **Merging workflow changes** needs one approving review on `main` (branch protection).
 
@@ -94,13 +100,16 @@ catalog instead. The Jenkins jobs keep their own Red Hat API keys (`preflight --
 keys listed at connect.redhat.com/account/api-keys). Any `RH_API_TOKEN` secret left on the environment
 can be deleted.
 
-### 3. Verify the PAT has write access to the fork
+### 3. Verify the tokens
 
 ```bash
 GH_TOKEN=<your-pat> gh repo view sonatype/certified-operators
 ```
 
-The dry run also checks this for you.
+The dry run also checks that `RELEASE_PAT` can reach the fork. It cannot check `UPSTREAM_PR_PAT`,
+because that token is only used to open the PR. A missing or expired `UPSTREAM_PR_PAT` therefore shows
+up only on a real run, at the "Open PR to Red Hat upstream" step, after the fork has been pushed to.
+Check its expiry before each release.
 
 ## Dry run (rehearsal)
 
@@ -150,7 +159,11 @@ and the Jenkins links. **Check the detected version there and cancel the run if 
 2. **Build the operator image**: trigger
    [operator-nexus-repository-release](https://jenkins.ci.sonatype.dev/job/nxrm/job/Red%20Hat/job/operator-nexus-repository-release/)
    with version `<operator_version>`.
-3. Wait about 30 minutes for both builds and Red Hat publishing (including the scan) to finish.
+3. Wait about 30 minutes for both builds and Red Hat publishing to finish. The workflow needs each
+   tag to be **published and certified** in the Red Hat catalog; it does not wait for the portal's
+   security scan to finish. Check by hand with
+   `scripts/get-rh-image-sha.sh <tag> <registry>/sonatype/<image>`, which prints the digest once the tag is
+   certified. The portal may still show "Syncing tags" for a few minutes after that.
 4. **Check the `latest` tag.** Red Hat usually moves `latest` to the new image on its own. If it does
    not, run **Sync Tags** on the image in Red Hat Connect: the
    [Nexus Repository Red Hat Universal Base Image](https://connect.redhat.com/projects/5e61d90a38776799eb517bd2/images)
@@ -170,8 +183,9 @@ When both images show as published at connect.redhat.com, click **Review pending
   one tag
 - generates the OLM bundle with `scripts/new_version.sh bundle`
 - syncs the `sonatype/certified-operators` fork, copies the bundle in, pushes it
-- opens a PR to `redhat-openshift-ecosystem/certified-operators`
-- waits for Red Hat to merge it, then commits the bundle to `main`
+- opens a PR to `redhat-openshift-ecosystem/certified-operators`, from `sonatype:main`, using
+  `UPSTREAM_PR_PAT`
+- waits for Red Hat to merge it, then commits the bundle to `main` and tags it `<operator_version>`
 
 ### Step 4: Review the PR
 
@@ -179,16 +193,17 @@ The job summary links the PR. The workflow then waits for it (up to 2 hours, or 
 certification pipeline validates the submission, which typically takes 35 to 55 minutes (recent PRs: 36, 37 and 54 minutes from pipeline start to merge, of which the preflight test is 20 to 35), and
 auto-merges on pass.
 
-- **Merged:** the workflow commits the bundle to `main` and finishes. Only now is the release
-  recorded in this repository.
+- **Merged:** the workflow commits the bundle to `main`, tags that commit `<operator_version>` and
+  finishes. Only now is the release recorded in this repository.
 - **Pipeline failed (PR stays open):** Red Hat marks the PR with the `operator-hosted-pipeline/failed` label and the job stops early and fails, with
   **nothing committed to `main` for the bundle**. Red Hat leaves the PR open, so fix it there: read the bot's Pipeline Summary comment and
   push a change to the PR branch (`main` of `sonatype/certified-operators`). That re-runs Red Hat's
   validation on the same PR. Do **not** re-run the release workflow, because it would fail on the
-  open PR. If the failure was on Red Hat's side (as in September 2025, when a pipeline bug failed the preflight test), comment `/pipeline restart operator-hosted-pipeline` on the PR instead of changing anything. When the PR merges, run **Operator Release - Finalize** (below).
+  open PR. If the failure was on Red Hat's side (as in September 2025, when a pipeline bug failed the preflight test), comment `/pipeline restart operator-hosted-pipeline` on the PR instead of changing anything. When the PR merges, run **Operator Release - Finalize** (below), which commits the bundle and tags it.
 - **Not merged in time, or merged later:** the job fails after the 2-hour wait. When the PR
   merges, run **Operator Release - Finalize**.
-- **Closed without merging:** nothing was committed to `main`. Fix the cause and re-run the release.
+- **Closed without merging:** nothing was committed to `main` and nothing was tagged. Fix the cause and
+  re-run the release. The fork already has the bundle commit; the push step skips it.
 
 ### Step 4b: Finalize (after fixes, or when Red Hat merged late)
 
@@ -201,7 +216,12 @@ GitHub Actions → **Operator Release - Finalize** → **Run workflow** (branch 
 - It refuses to run unless that PR is **merged**. It copies the merged `manifests/` and `metadata/`
   from `redhat-openshift-ecosystem/certified-operators` into
   `deploy/olm-catalog/nexus-repository-ha-operator-certified/<version>/` and commits to `main`, so
-  any correction made in the PR is kept.
+  any correction made in the PR is kept. A real run (not a dry run) then tags that commit
+  `<version>`, and skips the tag if it already exists.
+- A dry run commits, pushes and tags nothing. It still needs the PR to be merged, so before the
+  merge it fails with "the PR is OPEN, not MERGED". That is a quick way to check the PR is found.
+- It is safe to run after the release job already committed the bundle: it logs "nothing to commit"
+  and still tags. Wait for the job to finish first, so the two do not commit at the same moment.
 - It uses the same `operator-release-approval` environment, so it needs the same approval.
 
 If a fix was needed, also correct its cause in the bundle templates or `scripts/new_version.sh`
@@ -212,12 +232,32 @@ rejected.
 
 ### Step 5: Finish up
 
-The workflow (or Finalize) tags the commit that holds the bundle with `<operator_version>` and pushes
-the tag. It skips if the tag already exists on `origin`. The tag step needs `RELEASE_PAT` to have
-Contents read/write, which it already does.
+The release job (when the PR merged within the wait) or Finalize (real run) tags the commit that
+holds the bundle with `<operator_version>` and pushes the tag. It skips if the tag already exists on
+`origin`, and refuses if the bundle is not in the checkout. `RELEASE_PAT` needs only Contents
+read/write for this. Check that `git ls-remote --tags origin <operator_version>` shows the commit
+that adds the bundle. If the tag is missing (for example the tag push failed), run Finalize for real
+again, or tag by hand with `git tag <operator_version> <bundle-commit> && git push origin <operator_version>`.
 
-Set the Jira fix version via the
+Then set the Jira fix version via the
 [Jenkins job](https://jenkins.ci.sonatype.dev/job/integrations/job/Set%20Jira%20Fix%20Version/).
+
+## What to do in each scenario
+
+| What happens | Bundle on `main` | Tag | What to do |
+|---|---|---|---|
+| **Happy path:** PR merges within the 2-hour wait | Job commits it | Job tags it | Nothing. Check the tag, set the Jira fix version, check `latest` |
+| PR merges after the job gave up waiting | Not yet | Not yet | Run **Finalize** for real (dry run first) |
+| Red Hat pipeline fails (`operator-hosted-pipeline/failed`) | Not yet | Not yet | Fix the PR or comment `/pipeline restart operator-hosted-pipeline`. Once merged, run **Finalize** |
+| PR closed without merging | No | No | Fix the cause, then re-run the release |
+| You cancel or the job dies after the PR merged | Maybe | No | Run **Finalize** for real: it commits if needed and tags |
+| `bundle-and-pr` fails before the PR is opened | No | No | Fix the cause, **Re-run failed jobs** (not all jobs) |
+| `bundle-and-pr` fails after the PR is opened | No | No | Do **not** re-run: it would fail on the open PR. Follow the PR, then **Finalize** |
+
+A fix to the workflow files only takes effect on a **new** run. "Re-run failed jobs" replays the
+workflow as it was when the run started, so after merging a workflow fix start a new run, or use
+Finalize (which always runs the current `main`). A new run is safe to repeat: `prepare` skips its
+commit when the version files already match, and the fork push skips when the bundle is already there.
 
 ## Version rules and patch releases
 
@@ -246,7 +286,8 @@ before failing, check `main` before re-running.
 
 The `prepare` commit is already done. In the Actions UI use **Re-run failed jobs** (not "Re-run all
 jobs") to rerun only `bundle-and-pr` with the same inputs. Re-running a job that uses the
-environment asks for approval again.
+environment asks for approval again. If the fix was a change to the workflow files, a re-run will not
+pick it up (see [What to do in each scenario](#what-to-do-in-each-scenario)).
 
 | Symptom | Fix |
 |---|---|
@@ -262,10 +303,13 @@ environment asks for approval again.
 | "`sonatype` forbids access via a personal access token (classic)" | `RELEASE_PAT` holds a classic token. Replace it with a fine-grained one (see Secrets) |
 | `Resource not accessible by personal access token (createPullRequest)` | The PR step is using a fine-grained token. It must use the classic `UPSTREAM_PR_PAT` environment secret |
 | `Upstream commits contain workflow changes, which require the workflow scope` | `RELEASE_PAT` lacks the Workflows read/write permission. Add it, or click Sync fork on `sonatype/certified-operators`, then re-run only `bundle-and-pr` |
+| Tag push rejected | A tag protection rule or ruleset blocks creating `<operator_version>`. Allow it, then run Finalize for real again, or tag by hand (see Step 5) |
+| Finalize says "no certified-operators PR from sonatype:main found" | The PR title must contain `(<operator_version>)` and its head must be `main` on the `sonatype` fork. Enter the version explicitly, or leave it blank for the newest such PR |
 | Empty token / authentication errors | The job did not get the environment secret: check `RELEASE_PAT` is an environment secret on `operator-release-approval` and the run was approved |
 
-## First-release comparison
+## Release history
 
-On the first real release using this workflow, run it **in parallel** with the existing manual
-process. Compare the generated bundle files against what you would have produced manually. Only
-retire the manual steps once the outputs match.
+3.96.4-1 was the first real release run through this workflow. It exposed the token limits now
+documented under Secrets (Workflows permission on `RELEASE_PAT`, the classic `UPSTREAM_PR_PAT`), the
+`--head` lookup bug in Finalize and the missing automatic tag. If you change the workflow again,
+rehearse it with a dry run first and compare the generated bundle with the previous release's.
